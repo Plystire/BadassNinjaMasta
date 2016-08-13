@@ -18,7 +18,7 @@ public class InteractObject : MonoBehaviour {
     private Vector3 deltaPos;
     private Vector3 lastPos;
     public Vector3 GetDeltaPos() { return deltaPos; }
-    private float rotationFactor = 600.0f;
+    private float rotationFactor = 200000.0f;
     public float GetRotationFactor() { return rotationFactor; }
     private Quaternion deltaRot;
     private Quaternion lastRot;
@@ -54,29 +54,50 @@ public class InteractObject : MonoBehaviour {
         lastPos = new Vector3();
         lastRot = new Quaternion();
     }
+
+    public void Update()
+    {
+        // Do update stuff
+    }
 	
 	// Update is called once per frame
-	public void Update () {
+	public void FixedUpdate () {
 	    if (currentlyInteracting)
         {
             if (!snapHold)
             {   // Update physics to follow attached wand
                 deltaPos = interactionPoint.position - transform.position;
-                rigidbody.velocity = deltaPos * velocityFactor * Time.fixedDeltaTime;
+                if (deltaPos.sqrMagnitude < 0.001)
+                {   // Snap to controller if our distance is low enough (Prevents velocity flicker)
+                    transform.position = interactionPoint.position;
+                    rigidbody.velocity = new Vector3();
+                }
+                else
+                {   // Transition to our desired position via velocity
+                    rigidbody.velocity = deltaPos * velocityFactor * Time.fixedDeltaTime;
+                }
 
                 deltaRot = interactionPoint.rotation * Quaternion.Inverse(transform.rotation);
                 deltaRot.ToAngleAxis(out angle, out axis);
 
-                if (angle > 180)
-                {
-                    angle -= 360;
+                if (angle < 1 && angle > -1)
+                {   // Snap to controller is our distance is low enough (Prevent velocity flicker)
+                    transform.rotation = interactionPoint.rotation;
+                    rigidbody.angularVelocity = new Vector3();
                 }
-                else if (angle < -180)    // Only you can prevent wrap jump
-                {
-                    angle += 360;
-                }
+                else
+                {   // Transition to our desired rotation
+                    if (angle > 180)
+                    {
+                        angle -= 360;
+                    }
+                    else if (angle < -180)    // Only you can prevent wrap jump
+                    {
+                        angle += 360;
+                    }
 
-                rigidbody.angularVelocity = (Time.fixedDeltaTime * angle * axis) * rotationFactor;
+                    rigidbody.angularVelocity = (Time.fixedDeltaTime * angle * axis) * rotationFactor;
+                }
             } else
             {   // Snap to wand
                 transform.position = interactionPoint.position;
@@ -130,6 +151,11 @@ public class InteractObject : MonoBehaviour {
                 } catch(Exception) { }  // If we fail, don't worry. It may have been destroyed at some other point
             }
         }
+    }
+
+    public virtual void InitPickup(WandController wand, int maxCount, Valve.VR.EVRButtonId btn)
+    {
+        wand.pickupObject(this, maxCount, btn);
     }
 
     public virtual void BeginInteraction(WandController wand)

@@ -56,16 +56,16 @@ public class WandController : MonoBehaviour {
         {
             if (controller.GetPressUp(currentIObjDropButton))
             {
-                Debug.Log("Drop Interacting Object!");
+                //Debug.Log("Drop Interacting Object!");
                 dropInteractObject();   // Drop it
             }
         }
 
         if (triggerDown)
         {
-            Debug.Log("TriggerDown Nearest!");
+            //Debug.Log("TriggerDown Nearest!");
             triggerNearest();
-            Debug.Log(potentialObjs.Count);
+            //Debug.Log(potentialObjs.Count);
         }
         if (triggerUp)
         {
@@ -93,7 +93,7 @@ public class WandController : MonoBehaviour {
 
         if (IObj && !currentIObj.Contains(IObj))    // Don't try to pickup our pickedup items :P
         {
-            Debug.Log("WandTriggerEnter: " + col.name);
+            //Debug.Log("WandTriggerEnter: " + col.name);
             potentialObjs.Add(IObj);
         }
     }
@@ -218,7 +218,7 @@ public class WandController : MonoBehaviour {
         currentIObj[ind].BeginInteraction(this);
         currentlyInteracting = true;
 
-        Debug.Log("Picking up [" + currentIObj[ind] + " : " + ind + "]");
+        //Debug.Log("Picking up [" + currentIObj[ind] + " : " + ind + "]");
     }
 
     public void dropInteractObject()
@@ -227,7 +227,7 @@ public class WandController : MonoBehaviour {
         {   // But not if we are in stickyTime-out
             return;
         }
-        Debug.Log("[dropInteractObject] Count: " + currentIObj.Count);
+        //Debug.Log("[dropInteractObject] Count: " + currentIObj.Count);
         if (currentIObj.Count > 0 && currentIObj[0])    // Not null
         {
             currentIObj[0].EndInteraction(this);   // Drop it

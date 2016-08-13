@@ -24,6 +24,11 @@ public class ShadowStepController : MonoBehaviour {
     /// </summary>
     public float speedFactor = 0.5f;
 
+    /// <summary>
+    /// Maximum distance can travel per sprint
+    /// </summary>
+    public float sprintDistance = 8.0f;
+
 	// Use this for initialization
 	void Start () {
         wand = GetComponent<WandController>();
@@ -50,7 +55,7 @@ public class ShadowStepController : MonoBehaviour {
             float mag = tAxis.magnitude;
             tAxis /= mag > 1.0f ? mag : 1.0f;       // Normalize! (Maximize our scalar to 1.0f magnitude)
 
-            tAxis *= 8.0f;  // Teleport 8 meters away!
+            tAxis *= sprintDistance;  // Teleport away!
 
             // Get speed factor
             e.spd = speedFactor;

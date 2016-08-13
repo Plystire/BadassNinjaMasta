@@ -13,11 +13,13 @@
     <TargetFrameworkIdentifier>.NETFramework</TargetFrameworkIdentifier>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <TargetFrameworkProfile>Unity Subset v3.5</TargetFrameworkProfile>
-    <CompilerResponseFile></CompilerResponseFile>
+    <CompilerResponseFile>
+    </CompilerResponseFile>
     <UnityProjectType>Game:1</UnityProjectType>
     <UnityBuildTarget>StandaloneWindows64:19</UnityBuildTarget>
     <UnityVersion>5.4.0f3</UnityVersion>
-    <RootNamespace></RootNamespace>
+    <RootNamespace>
+    </RootNamespace>
     <LangVersion Condition=" '$(VisualStudioVersion)' != '10.0' ">4</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -114,10 +116,10 @@
     <Compile Include="Assets\Scripts\PlayerTeleportController.cs" />
     <Compile Include="Assets\Scripts\ResetInteract.cs" />
     <Compile Include="Assets\Scripts\ShadowStepController.cs" />
-    <Compile Include="Assets\Scripts\StarBagBehavior.cs" />
+    <Compile Include="Assets\Scripts\BagBehavior.cs" />
+    <Compile Include="Assets\Scripts\KunaiBehavior.cs" />
     <Compile Include="Assets\Scripts\StarBehavior.cs" />
     <Compile Include="Assets\Scripts\StickyCollider.cs" />
-    <Compile Include="Assets\Scripts\ThrowingStarBehavior.cs" />
     <Compile Include="Assets\Scripts\ThrowingStar_WandController.cs" />
     <Compile Include="Assets\Scripts\WandController.cs" />
     <Compile Include="Assets\SteamVR\Extras\SteamVR_GazeTracker.cs" />
@@ -240,6 +242,8 @@
     <None Include="Assets\SteamVR\Resources\SteamVR_Fade.shader" />
     <None Include="Assets\SteamVR\Resources\SteamVR_SphericalProjection.shader" />
     <None Include="Assets\SteamVR\readme.txt" />
+    <None Include="Assets\sryurikennset\Readme.txt" />
+    <None Include="Assets\sryurikennset\Readmejp.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\SyntaxTree\UnityVS\2015\UnityVS.CSharp.targets" />
 </Project>

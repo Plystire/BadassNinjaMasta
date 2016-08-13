@@ -18,12 +18,11 @@ public class StickyCollider : MonoBehaviour {
     void OnTriggerEnter(Collider col)
     {
         Rigidbody rig = GetComponentInParent<Rigidbody>();
-        if (rig && rig.velocity.magnitude < thresholdVelocity)
+        float rigmag = rig.velocity.magnitude;
+        //Debug.Log("[StickyCollider.OnTriggerEnter] VelMag: " + rigmag);
+        if (rig && rigmag < thresholdVelocity)
             return; // Don't stick if we're not moving fast enough
         CanStickTo cst = col.GetComponent<CanStickTo>();
-
-        Debug.Log("[StickyCollider.OnTriggerEnter] " + cst);
-        Debug.Log(rig.velocity.magnitude);
 
         if (cst)
         {

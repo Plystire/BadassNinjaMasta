@@ -12,8 +12,7 @@ public class StarBehavior : InteractObject {
     public float throwingVelocityMultiplier = 1.0f;
 
     public float lifeSpan = 5.0f;
-
-    private bool autoAiming = false;
+    
     private GameObject autoAimTarget = null;
 
     // Use this for initialization
@@ -32,24 +31,6 @@ public class StarBehavior : InteractObject {
         } else
         {   // Star is active!
 
-            // If auto-aiming, follow target
-            if (autoAiming)
-            {
-                //float mag = rig.velocity.magnitude;
-
-                ////GameObject go = new GameObject();
-                ////go.transform.position = transform.position;
-                //float dist = (autoAimTarget.transform.position - transform.position).magnitude;
-                //transform.LookAt(autoAimTarget.transform.position + ((dist / mag) * -Physics.gravity));
-
-                //rig.velocity = transform.forward * mag;
-                //rig.velocity = (rig.velocity / rig.velocity.magnitude) * mag;
-
-                //transform.rotation = go.transform.rotation;
-
-                //Destroy(go);
-            }
-
             // Lower life until dead
             lifeSpan -= Time.deltaTime;
             if (lifeSpan <= 0.0f)
@@ -61,23 +42,21 @@ public class StarBehavior : InteractObject {
 
     void OnCollisionEnter(Collision col)
     {
-        Debug.Log("Collision! " + col.ToString());
+        //Debug.Log("Collision! " + col.ToString());
     }
 
-    public void Init(WandController wand)
+    public override void InitPickup(WandController wand, int maxCount, Valve.VR.EVRButtonId btn)
     {
         // Grab StarWandCtrllr and add our star
         starWand = wand.GetComponent<ThrowingStar_WandController>();
         starWand.addStar(this);
 
-        Debug.Log("[StarBehavior.Init]");
-
-        wand.pickupObject(this, 4, Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger);
+        wand.pickupObject(this, maxCount, btn);
     }
 
     public override void OnTriggerDown(WandController wand)
     {
-        Init(wand);
+        InitPickup(wand, 4, Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger);
     }
 
     public override void BeginInteraction(WandController wand)
@@ -165,8 +144,7 @@ public class StarBehavior : InteractObject {
             // If best target angle is lower than acceptable amount, AUTO-AIM!!!
             if (bestTarget && lowestDiff <= maxAutoAimAngle)
             {
-                Debug.Log("Found best auto-aim target: " + bestTarget);
-                autoAiming = true;
+                //Debug.Log("Found best auto-aim target: " + bestTarget);
                 autoAimTarget = bestTarget;
                 // Set velocity to make the shot!
                 float mag = rig.velocity.magnitude;
