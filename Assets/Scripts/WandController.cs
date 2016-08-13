@@ -81,8 +81,6 @@ public class WandController : MonoBehaviour {
             gripUpNearest();
         }
 
-        Debug.Log(padAxis);
-
     }
 
     #endregion

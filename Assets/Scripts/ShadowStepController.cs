@@ -48,7 +48,7 @@ public class ShadowStepController : MonoBehaviour {
             TeleportEventArgs e = new TeleportEventArgs();
             Vector2 tAxis = wand.padAxis - beginAxis;   // Get our vector from the player
             float mag = tAxis.magnitude;
-            tAxis /= mag > 1.0f ? 1.0f : mag;       // Normalize! (Maximize our scalar to 1.0f magnitude)
+            tAxis /= mag > 1.0f ? mag : 1.0f;       // Normalize! (Maximize our scalar to 1.0f magnitude)
 
             tAxis *= 8.0f;  // Teleport 8 meters away!
 
