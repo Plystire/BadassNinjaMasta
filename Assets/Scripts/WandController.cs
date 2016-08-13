@@ -17,6 +17,13 @@ public class WandController : MonoBehaviour {
     public bool gripUp { get { return controller.GetPressUp(gripButton); } }
     public bool gripPressed { get { return controller.GetPress(gripButton); } }
 
+    // Touchpad stuff
+    private Valve.VR.EVRButtonId padButton = Valve.VR.EVRButtonId.k_EButton_SteamVR_Touchpad;
+    public bool padDown { get { return controller.GetPressDown(padButton); } }
+    public bool padUp { get { return controller.GetPressUp(padButton); } }
+    public bool padPressed { get { return controller.GetPress(padButton); } }
+    public Vector2 padAxis { get { return controller.GetAxis(padButton); } }
+
     private SteamVR_Controller.Device controller { get { return SteamVR_Controller.Input((int)trackedObj.index); } }
     private SteamVR_TrackedObject trackedObj;
 
@@ -73,6 +80,8 @@ public class WandController : MonoBehaviour {
         {
             gripUpNearest();
         }
+
+        Debug.Log(padAxis);
 
     }
 

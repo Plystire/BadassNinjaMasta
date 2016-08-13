@@ -3,16 +3,63 @@ using System.Collections;
 
 public class ShadowStepController : MonoBehaviour {
 
-    public delegate void TeleportAction(object sender);
+    // OnTeleport event setup
+    public struct TeleportEventArgs
+    {
+        public Vector3 targPos;
+        public float spd;
+    }
+
+    public delegate void TeleportAction(object sender, TeleportEventArgs e);
     public static event TeleportAction OnTeleport;  // To teleport use OnTeleport() when not null
+    //
+
+    private WandController wand;
+
+    private bool teleporting = false;
+    private Vector2 beginAxis;
+
+    /// <summary>
+    /// Time taken to complete transportation
+    /// </summary>
+    public float speedFactor = 0.5f;
 
 	// Use this for initialization
 	void Start () {
-	    
+        wand = GetComponent<WandController>();
+        if (wand == null)
+            Debug.Log("ShadowStep.wand NULL");
 	}
 	
 	// Update is called once per frame
 	void Update () {
-	
+	    
+        // Check for teleportation process
+        if (wand.padDown)
+        {
+            Debug.Log("Begin ShadowStep!");
+            teleporting = true;
+            beginAxis = wand.padAxis;
+        }
+
+        if(teleporting && wand.padUp)
+        {
+            // TELEPORT!!!
+            TeleportEventArgs e = new TeleportEventArgs();
+            Vector2 tAxis = wand.padAxis - beginAxis;   // Get our vector from the player
+            float mag = tAxis.magnitude;
+            tAxis /= mag > 1.0f ? 1.0f : mag;       // Normalize! (Maximize our scalar to 1.0f magnitude)
+
+            tAxis *= 8.0f;  // Teleport 8 meters away!
+
+            // Get speed factor
+            e.spd = speedFactor;
+
+            e.targPos = transform.localToWorldMatrix.MultiplyPoint(new Vector3(tAxis.x, 0, tAxis.y));   // Transform our local projection into world space!
+
+            if (OnTeleport != null)
+                OnTeleport(this, e);
+        }
+
 	}
 }
