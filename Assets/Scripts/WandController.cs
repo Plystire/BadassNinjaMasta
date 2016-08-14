@@ -22,6 +22,7 @@ public class WandController : MonoBehaviour {
     public bool padDown { get { return controller.GetPressDown(padButton); } }
     public bool padUp { get { return controller.GetPressUp(padButton); } }
     public bool padPressed { get { return controller.GetPress(padButton); } }
+    public bool padTouched { get { return controller.GetTouch(padButton); } }
     public Vector2 padAxis { get { return controller.GetAxis(padButton); } }
 
     private SteamVR_Controller.Device controller { get { return SteamVR_Controller.Input((int)trackedObj.index); } }

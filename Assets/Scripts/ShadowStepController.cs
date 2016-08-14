@@ -38,16 +38,17 @@ public class ShadowStepController : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-	    
+
         // Check for teleportation process
-        if (wand.padDown)
+        Debug.Log("Pad state " + wand.padTouched.ToString());
+        if (!teleporting && wand.padTouched)
         {
             Debug.Log("Begin ShadowStep!");
             teleporting = true;
             beginAxis = wand.padAxis;
         }
 
-        if(teleporting && wand.padUp)
+        if(teleporting && !wand.padTouched)
         {
             // TELEPORT!!!
             TeleportEventArgs e = new TeleportEventArgs();
@@ -64,6 +65,8 @@ public class ShadowStepController : MonoBehaviour {
 
             if (OnTeleport != null)
                 OnTeleport(this, e);
+
+            teleporting = false;
         }
 
 	}
