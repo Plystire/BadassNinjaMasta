@@ -38,7 +38,9 @@ public class ShadowStepController : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-	    
+
+        Debug.Log("PadAxis: " + wand.padAxis);
+
         // Check for teleportation process
         if (wand.padDown)
         {

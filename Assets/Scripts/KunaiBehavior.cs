@@ -13,6 +13,13 @@ public class KunaiBehavior : InteractObject {
     
     private GameObject autoAimTarget = null;
 
+    private enum handleMode
+    {
+        Block, Throw
+    }
+
+    private handleMode state = handleMode.Block;
+
     // Use this for initialization
     new void Start () {
         base.Start();
@@ -43,8 +50,8 @@ public class KunaiBehavior : InteractObject {
         base.FixedUpdate();
 
         // Look in velocity direction
-        //Vector3 lookin = rig.velocity;
-        //transform.LookAt(lookin + transform.position); //, new Vector3(0,0, Mathf.Sin(Time.time * Mathf.PI) * 360.0f));
+        Vector3 lookin = rig.velocity;
+        transform.LookAt(lookin + transform.position, new Vector3(0,0, Mathf.Sin(Time.time * Mathf.PI) * 360.0f));
     }
 
     void OnCollisionEnter(Collision col)
@@ -60,10 +67,10 @@ public class KunaiBehavior : InteractObject {
         
         if (btn == Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger)
         {   // Throw mode with trigger
-
+            state = handleMode.Throw;
         } else if (btn == Valve.VR.EVRButtonId.k_EButton_Grip)
         {   // Block mode with grip
-
+            state = handleMode.Block;
         }
 
         wand.pickupObject(this, maxCount, btn);
@@ -78,7 +85,10 @@ public class KunaiBehavior : InteractObject {
     {
         base.BeginInteraction(wand);
 
-        SetInteractionPointLocal(new Vector3(0,-0.01f,-0.02f), new Vector3(-94,0,0));
+        if (state == handleMode.Block)
+            SetInteractionPointLocal(new Vector3(0,-0.01f,-0.02f), new Vector3(-184,0,0));
+        else
+            SetInteractionPointLocal(new Vector3(0, -0.01f, -0.02f), new Vector3(-4, 0, 0));
     }
 
     public override void EndInteraction(WandController wand)
