@@ -25,6 +25,7 @@ public class KunaiBehavior : InteractObject {
         base.Start();
 
         rig = GetComponent<Rigidbody>();
+        Debug.Log("Kunai rig: " + rig);
 	}
 	
 	// Update is called once per frame
@@ -34,7 +35,7 @@ public class KunaiBehavior : InteractObject {
         if (IsInteracting())
         {   //
         } else
-        {   // Star is active!
+        {   // active!
 
             // Lower life until dead
             lifeSpan -= Time.deltaTime;
@@ -53,8 +54,12 @@ public class KunaiBehavior : InteractObject {
         // Look in velocity direction when flying
         if (!IsInteracting())
         {
-            Vector3 lookin = rig.velocity;
-            transform.LookAt(lookin + transform.position, new Vector3(0, 0, Mathf.Sin(Time.time * Mathf.PI) * 360.0f));
+            if (state == handleMode.Throw)
+            {   // If we threw the kunai, make it face forward, cuz we is NINJA MASTA!
+                Vector3 lookin = rig.velocity;
+                if (lookin.sqrMagnitude >= 4.0f)
+                    transform.LookAt(lookin + transform.position, new Vector3(0, 0, Mathf.Sin(Time.time * Mathf.PI) * 360.0f));
+            }
         }
     }
 
@@ -65,15 +70,14 @@ public class KunaiBehavior : InteractObject {
 
     public override void InitPickup(WandController wand, int maxCount, Valve.VR.EVRButtonId btn)
     {
-        // Grab StarWandCtrllr and add our star
-        //starWand = wand.GetComponent<ThrowingStar_WandController>();
-        //starWand.addStar(this);
         
         if (btn == Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger)
         {   // Throw mode with trigger
             state = handleMode.Throw;
+            usingJoint = true;
         } else if (btn == Valve.VR.EVRButtonId.k_EButton_Grip)
         {   // Block mode with grip
+            usingJoint = false;
             state = handleMode.Block;
         }
 
@@ -94,23 +98,33 @@ public class KunaiBehavior : InteractObject {
         else
         {
             SetInteractionPointLocal(new Vector3(0, -0.01f, -0.02f), new Vector3(-4, 0, 0));
+            
 
             // Attach to wand's hinge joint
-            HingeJoint jnt = wand.GetComponent<HingeJoint>();
+            SpringJoint jnt = wand.GetComponent<SpringJoint>();
+            if (rig == null)    // For some reason our rig gets lost before we get here :(
+                rig = GetComponent<Rigidbody>();
             jnt.connectedBody = rig;
-            jnt.connectedAnchor = new Vector3();
+            jnt.connectedAnchor = new Vector3(0,0, 0.028f);
+            //Debug.Log(jnt.connectedBody);
         }
     }
 
     public override void EndInteraction(WandController wand)
     {
         bool wasInteracting = IsInteracting();
+        
+        // Dettach from wand's joint
+        SpringJoint jnt = wand.GetComponent<SpringJoint>();
+        if (rig == null)    // For some reason our rig gets lost before we get here :(
+            rig = GetComponent<Rigidbody>();
+        if (jnt.connectedBody == rig)
+            jnt.connectedBody = null;
 
         base.EndInteraction(wand);
 
         if (wasInteracting)
         {   // Provide throwingMultiplier impulse boost
-            Rigidbody rig = GetComponent<Rigidbody>();
             if (rig)
             {
                 rig.velocity *= throwingVelocityMultiplier;

@@ -13,13 +13,11 @@
     <TargetFrameworkIdentifier>.NETFramework</TargetFrameworkIdentifier>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <TargetFrameworkProfile>Unity Subset v3.5</TargetFrameworkProfile>
-    <CompilerResponseFile>
-    </CompilerResponseFile>
+    <CompilerResponseFile></CompilerResponseFile>
     <UnityProjectType>Game:1</UnityProjectType>
     <UnityBuildTarget>StandaloneWindows64:19</UnityBuildTarget>
     <UnityVersion>5.4.0f3</UnityVersion>
-    <RootNamespace>
-    </RootNamespace>
+    <RootNamespace></RootNamespace>
     <LangVersion Condition=" '$(VisualStudioVersion)' != '10.0' ">4</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -109,15 +107,15 @@
     <Compile Include="Assets\NatureStarterKit2\Standard Assets\Effects\ImageEffects\Scripts\Twirl.cs" />
     <Compile Include="Assets\NatureStarterKit2\Standard Assets\Effects\ImageEffects\Scripts\VignetteAndChromaticAberration.cs" />
     <Compile Include="Assets\NatureStarterKit2\Standard Assets\Effects\ImageEffects\Scripts\Vortex.cs" />
+    <Compile Include="Assets\Scripts\BagBehavior.cs" />
     <Compile Include="Assets\Scripts\CanStickTo.cs" />
     <Compile Include="Assets\Scripts\CubeBehavior.cs" />
     <Compile Include="Assets\Scripts\InteractObject.cs" />
+    <Compile Include="Assets\Scripts\KunaiBehavior.cs" />
     <Compile Include="Assets\Scripts\PlayerBodyBehavior.cs" />
     <Compile Include="Assets\Scripts\PlayerTeleportController.cs" />
     <Compile Include="Assets\Scripts\ResetInteract.cs" />
     <Compile Include="Assets\Scripts\ShadowStepController.cs" />
-    <Compile Include="Assets\Scripts\BagBehavior.cs" />
-    <Compile Include="Assets\Scripts\KunaiBehavior.cs" />
     <Compile Include="Assets\Scripts\StarBehavior.cs" />
     <Compile Include="Assets\Scripts\StickyCollider.cs" />
     <Compile Include="Assets\Scripts\ThrowingStar_WandController.cs" />

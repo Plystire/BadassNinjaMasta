@@ -32,7 +32,9 @@ public class InteractObject : MonoBehaviour {
     public float stickyPickup = 0.0f;
     //
     // will object lag behind based on mass or will it snap onto wand
-    public bool snapHold = false;   
+    public bool snapHold = false;
+
+    public bool usingJoint = false;
 
     virtual public void OnTriggerDown(WandController wand) { }
     virtual public void OnTriggerUp(WandController wand) { }
@@ -62,63 +64,67 @@ public class InteractObject : MonoBehaviour {
 	
 	// Update is called once per frame
 	public void FixedUpdate () {
-	    if (currentlyInteracting)
+        if (currentlyInteracting)
         {
-            if (!snapHold)
-            {   // Update physics to follow attached wand
-                deltaPos = interactionPoint.position - transform.position;
-                if (deltaPos.sqrMagnitude < 0.001)
-                {   // Snap to controller if our distance is low enough (Prevents velocity flicker)
+            if (!usingJoint)
+            {
+                if (!snapHold)
+                {   // Update physics to follow attached wand
+                    deltaPos = interactionPoint.position - transform.position;
+                    if (deltaPos.sqrMagnitude < 0.001)
+                    {   // Snap to controller if our distance is low enough (Prevents velocity flicker)
+                        transform.position = interactionPoint.position;
+                        rigidbody.velocity = new Vector3();
+                    }
+                    else
+                    {   // Transition to our desired position via velocity
+                        rigidbody.velocity = deltaPos * velocityFactor * Time.fixedDeltaTime;
+                    }
+
+                    deltaRot = interactionPoint.rotation * Quaternion.Inverse(transform.rotation);
+                    deltaRot.ToAngleAxis(out angle, out axis);
+
+                    if (angle < 1 && angle > -1)
+                    {   // Snap to controller is our distance is low enough (Prevent velocity flicker)
+                        transform.rotation = interactionPoint.rotation;
+                        rigidbody.angularVelocity = new Vector3();
+                    }
+                    else
+                    {   // Transition to our desired rotation
+                        if (angle > 180)
+                        {
+                            angle -= 360;
+                        }
+                        else if (angle < -180)    // Only you can prevent wrap jump
+                        {
+                            angle += 360;
+                        }
+
+                        rigidbody.angularVelocity = (Time.fixedDeltaTime * angle * axis) * rotationFactor;
+                    }
+                }
+                else
+                {   // Snap to wand
                     transform.position = interactionPoint.position;
-                    rigidbody.velocity = new Vector3();
-                }
-                else
-                {   // Transition to our desired position via velocity
-                    rigidbody.velocity = deltaPos * velocityFactor * Time.fixedDeltaTime;
-                }
-
-                deltaRot = interactionPoint.rotation * Quaternion.Inverse(transform.rotation);
-                deltaRot.ToAngleAxis(out angle, out axis);
-
-                if (angle < 1 && angle > -1)
-                {   // Snap to controller is our distance is low enough (Prevent velocity flicker)
                     transform.rotation = interactionPoint.rotation;
-                    rigidbody.angularVelocity = new Vector3();
-                }
-                else
-                {   // Transition to our desired rotation
-                    if (angle > 180)
+
+                    // If we have a rigidbody, ensure our velocities are reset so forces do not accumulate
+                    Rigidbody rig = GetComponent<Rigidbody>();
+                    if (rig)
                     {
-                        angle -= 360;
-                    }
-                    else if (angle < -180)    // Only you can prevent wrap jump
-                    {
-                        angle += 360;
+                        rig.velocity = new Vector3();
+                        rig.angularVelocity = new Vector3();
                     }
 
-                    rigidbody.angularVelocity = (Time.fixedDeltaTime * angle * axis) * rotationFactor;
+                    // Track our deltas for when we let go
+                    deltaPos = transform.position - lastPos;
+
+                    deltaRot = transform.rotation * Quaternion.Inverse(lastRot);
+                    deltaRot.ToAngleAxis(out angle, out axis);
+
+                    lastPos = transform.position;
+                    lastRot = transform.rotation;
                 }
-            } else
-            {   // Snap to wand
-                transform.position = interactionPoint.position;
-                transform.rotation = interactionPoint.rotation;
-
-                // If we have a rigidbody, ensure our velocities are reset so forces do not accumulate
-                Rigidbody rig = GetComponent<Rigidbody>();
-                if (rig)
-                {
-                    rig.velocity = new Vector3();
-                    rig.angularVelocity = new Vector3();
-                }
-
-                // Track our deltas for when we let go
-                deltaPos = transform.position - lastPos;
-
-                deltaRot = transform.rotation * Quaternion.Inverse(lastRot);
-                deltaRot.ToAngleAxis(out angle, out axis);
-
-                lastPos = transform.position;
-                lastRot = transform.rotation;
             }
         }
 	}
