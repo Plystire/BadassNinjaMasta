@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 
 public class ShadowStepController : MonoBehaviour {
@@ -38,9 +38,7 @@ public class ShadowStepController : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-
         // Check for teleportation process
-        Debug.Log("Pad state " + wand.padTouched.ToString());
         if (!teleporting && wand.padTouched)
         {
             Debug.Log("Begin ShadowStep!");

@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System;
@@ -7,23 +7,33 @@ public class WandController : MonoBehaviour {
 
     // Trigger stuff
     private Valve.VR.EVRButtonId triggerButton = Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger;
-    public bool triggerDown { get { return controller.GetPressDown(triggerButton); } }
-    public bool triggerUp { get { return controller.GetPressUp(triggerButton); } }
-    public bool triggerPressed { get { return controller.GetPress(triggerButton); } }
+    private bool trigD = false;
+    private bool trigU = false;
+    private bool trig = false;
+    public bool triggerDown { get { return trigD; } }
+    public bool triggerUp { get { return trigU; } }
+    public bool triggerPressed { get { return trig; } }
 
     // Grip stuff
     private Valve.VR.EVRButtonId gripButton = Valve.VR.EVRButtonId.k_EButton_Grip;
-    public bool gripDown { get { return controller.GetPressDown(gripButton); } }
-    public bool gripUp { get { return controller.GetPressUp(gripButton); } }
-    public bool gripPressed { get { return controller.GetPress(gripButton); } }
+    private bool gripD = false;
+    private bool gripU = false;
+    private bool grip = false;
+    public bool gripDown { get { return gripD; } }
+    public bool gripUp { get { return gripU; } }
+    public bool gripPressed { get { return grip; } }
 
     // Touchpad stuff
     private Valve.VR.EVRButtonId padButton = Valve.VR.EVRButtonId.k_EButton_SteamVR_Touchpad;
-    public bool padDown { get { return controller.GetPressDown(padButton); } }
-    public bool padUp { get { return controller.GetPressUp(padButton); } }
-    public bool padPressed { get { return controller.GetPress(padButton); } }
+    private bool padD = false;
+    private bool padU = false;
+    private bool pad = false;
+    private Vector2 padA = new Vector2();
+    public bool padDown { get { return padD; } }
+    public bool padUp { get { return padU; } }
+    public bool padPressed { get { return pad; } }
+    public Vector2 padAxis { get { return padA; } }
     public bool padTouched { get { return controller.GetTouch(padButton); } }
-    public Vector2 padAxis { get { return controller.GetAxis(padButton); } }
 
     private SteamVR_Controller.Device controller { get { return SteamVR_Controller.Input((int)trackedObj.index); } }
     private SteamVR_TrackedObject trackedObj;
@@ -49,6 +59,27 @@ public class WandController : MonoBehaviour {
 	// Update is called once per frame
 	void Update ()
     {
+        // Update controller state
+        trigD = controller.GetPressDown(triggerButton);
+        trigU = controller.GetPressUp(triggerButton);
+        if (trigD)
+            trig = true;
+        if (trigU)
+            trig = false;
+        gripD = controller.GetPressDown(gripButton);
+        gripU = controller.GetPressUp(gripButton);
+        if (gripD)
+            grip = true;
+        if (gripU)
+            grip = false;
+        padD = controller.GetPressDown(padButton);
+        padU = controller.GetPressUp(padButton);
+        if (padD)
+            pad = true;
+        if (padU)
+            pad = false;
+        padA = controller.GetAxis(padButton);
+
         // Update sticky time
         stickyTime -= Time.deltaTime;
 
