@@ -42,6 +42,7 @@ public class KunaiBehavior : InteractObject {
             {
                 Destroy(gameObject);
             }
+
         }
     }
 
@@ -49,9 +50,12 @@ public class KunaiBehavior : InteractObject {
     {
         base.FixedUpdate();
 
-        // Look in velocity direction
-        Vector3 lookin = rig.velocity;
-        transform.LookAt(lookin + transform.position, new Vector3(0,0, Mathf.Sin(Time.time * Mathf.PI) * 360.0f));
+        // Look in velocity direction when flying
+        if (!IsInteracting())
+        {
+            Vector3 lookin = rig.velocity;
+            transform.LookAt(lookin + transform.position, new Vector3(0, 0, Mathf.Sin(Time.time * Mathf.PI) * 360.0f));
+        }
     }
 
     void OnCollisionEnter(Collision col)
@@ -86,9 +90,16 @@ public class KunaiBehavior : InteractObject {
         base.BeginInteraction(wand);
 
         if (state == handleMode.Block)
-            SetInteractionPointLocal(new Vector3(0,-0.01f,-0.02f), new Vector3(-184,0,0));
+            SetInteractionPointLocal(new Vector3(0, -0.01f, -0.02f), new Vector3(-184, 0, 0));
         else
+        {
             SetInteractionPointLocal(new Vector3(0, -0.01f, -0.02f), new Vector3(-4, 0, 0));
+
+            // Attach to wand's hinge joint
+            HingeJoint jnt = wand.GetComponent<HingeJoint>();
+            jnt.connectedBody = rig;
+            jnt.connectedAnchor = new Vector3();
+        }
     }
 
     public override void EndInteraction(WandController wand)
