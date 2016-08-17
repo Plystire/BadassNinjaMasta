@@ -43,7 +43,7 @@ public class RoomBehavior : Photon.PunBehaviour {
         enableBehavior(player.GetComponent<SteamVR_PlayArea>());
         enableBehavior(player.GetComponent<PlayerTeleportController>());
         // And stuff on children
-        foreach(ShadowStepController ssc in player.GetComponentsInChildren<ShadowStepController>())
+        foreach (ShadowStepController ssc in player.GetComponentsInChildren<ShadowStepController>())
         {
             ssc.enabled = true;
         }
