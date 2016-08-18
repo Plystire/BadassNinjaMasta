@@ -33,6 +33,8 @@ public class RoomBehavior : Photon.PunBehaviour {
     {
         if (thing != null)
             thing.enabled = true;
+        else
+            Debug.LogWarning("enableBehavior failed to enable: " + thing.GetType());
     }
 
     new public void OnJoinedRoom()
