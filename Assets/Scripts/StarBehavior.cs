@@ -11,6 +11,8 @@ public class StarBehavior : InteractObject {
     public float maxAutoAimAngle = 10.0f;
     public float throwingVelocityMultiplier = 1.0f;
 
+    public bool networkMode = false;
+
     public float lifeSpan = 5.0f;
     
     private GameObject autoAimTarget = null;
@@ -20,6 +22,15 @@ public class StarBehavior : InteractObject {
         base.Start();
 
         rig = GetComponent<Rigidbody>();
+
+        if (networkMode)
+        {
+            PhotonView pv = GetComponent<PhotonView>();
+            if (pv && pv.isMine)
+            {
+                rig.useGravity = true;
+            }
+        }
 	}
 	
 	// Update is called once per frame
