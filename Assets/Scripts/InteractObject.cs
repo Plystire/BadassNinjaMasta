@@ -161,7 +161,7 @@ public class InteractObject : MonoBehaviour {
 
     public virtual void InitNetworkPickup(GameObject wand, int maxCount)
     {
-        BeginInteraction(null); // No wand
+        BeginInteraction(wand);
     }
 
     public virtual void InitPickup(WandController wand, int maxCount, Valve.VR.EVRButtonId btn)

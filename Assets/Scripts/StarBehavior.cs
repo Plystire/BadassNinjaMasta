@@ -52,7 +52,7 @@ public class StarBehavior : InteractObject {
         starWand = wand.GetComponent<ThrowingStar_WandController>();
         starWand.addStar(this);
 
-        BeginInteraction(null); // No wand
+        BeginInteraction(wand);
     }
 
     public override void InitPickup(WandController wand, int maxCount, Valve.VR.EVRButtonId btn)
