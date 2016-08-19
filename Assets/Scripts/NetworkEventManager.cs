@@ -9,16 +9,19 @@ public class NetworkEventManager : Photon.PunBehaviour {
     // Player components
     struct playerRig
     {
-        public List<Component> comps;
+        public GameObject right;
+        public GameObject left;
+        public GameObject head;
         public int id;
     }
-    private List<playerRig> playerRigs = new List<playerRig>();
+    private static List<playerRig> playerRigs = new List<playerRig>();
 
     // Event codes
     public enum EventCodes
     {
         SpawnWeapon,
-        ReleaseWeapon
+        ReleaseWeapon,
+        PlayerJoined
     }
     // Attach points
     public enum AttachPoints
@@ -36,8 +39,9 @@ public class NetworkEventManager : Photon.PunBehaviour {
         
     }
 
-    private void OnEvent(byte code, object content, int senderId)
+    public void OnEvent(byte code, object content, int senderId)
     {
+        Debug.Log("Received Event! " + code);
         switch((EventCodes)code)
         {
             case EventCodes.SpawnWeapon:
@@ -55,13 +59,13 @@ public class NetworkEventManager : Photon.PunBehaviour {
                         switch((AttachPoints)cont["attachTo"])
                         {
                             case AttachPoints.RightHand:
-                                parent = (Transform)pr.comps[0];
+                                parent = pr.right.transform;
                                 break;
                             case AttachPoints.LeftHand:
-                                parent = (Transform)pr.comps[1];
+                                parent = pr.left.transform;
                                 break;
                             default:
-                                parent = (Transform)pr.comps[2];
+                                parent = pr.head.transform;
                                 break;
                         }
 
@@ -86,12 +90,13 @@ public class NetworkEventManager : Photon.PunBehaviour {
         PhotonNetwork.RaiseEvent(eventCode, eventContent, sendReliable, options);
     }
 
-    new public void OnPhotonInstantiate(PhotonMessageInfo info)
+    public static void checkInPlayer(int ID, GameObject right, GameObject left, GameObject head)
     {   // Track all camera rigs that players instantiate
-        List<Component> li = info.photonView.ObservedComponents;
         playerRig pr = new playerRig();
-        pr.comps = li;
-        pr.id = info.sender.ID;
+        pr.right = right;
+        pr.left = left;
+        pr.head = head;
+        pr.id = ID;
         playerRigs.Add(pr);
     }
 }
