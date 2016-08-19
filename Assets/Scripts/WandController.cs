@@ -246,7 +246,7 @@ public class WandController : MonoBehaviour {
         this.maxInteract = maxInteractions;
 
         // Pickup the object
-        currentIObj[ind].BeginInteraction(this);
+        currentIObj[ind].BeginInteraction(gameObject);
         currentlyInteracting = true;
 
         //Debug.Log("Picking up [" + currentIObj[ind] + " : " + ind + "]");

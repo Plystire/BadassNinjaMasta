@@ -169,14 +169,14 @@ public class InteractObject : MonoBehaviour {
         wand.pickupObject(this, maxCount, btn);
     }
 
-    public virtual void BeginInteraction(WandController wand)
+    public virtual void BeginInteraction(GameObject wand)
     {
         if (wand)
         {
             if(interactionPoint == null)
                 interactionPoint = new GameObject().transform;  // If we lost it, make a new one
 
-            attachedWand = wand;
+            attachedWand = wand.GetComponent<WandController>();
             interactionPoint.position = wand.transform.position;
             interactionPoint.rotation = wand.transform.rotation;
             interactionPoint.SetParent(wand.transform, true);
@@ -184,7 +184,8 @@ public class InteractObject : MonoBehaviour {
             currentlyInteracting = true;
 
             // Start timer for sticky pickup
-            wand.stickyPickup(stickyPickup);
+            if (attachedWand)
+                attachedWand.stickyPickup(stickyPickup);
         }
     }
 

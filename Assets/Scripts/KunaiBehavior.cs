@@ -89,7 +89,7 @@ public class KunaiBehavior : InteractObject {
         InitPickup(wand, 1, Valve.VR.EVRButtonId.k_EButton_Grip);
     }
 
-    public override void BeginInteraction(WandController wand)
+    public override void BeginInteraction(GameObject wand)
     {
         base.BeginInteraction(wand);
 

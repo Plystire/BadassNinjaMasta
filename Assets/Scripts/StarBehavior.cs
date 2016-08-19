@@ -69,10 +69,9 @@ public class StarBehavior : InteractObject {
         InitPickup(wand, 4, Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger);
     }
 
-    public override void BeginInteraction(WandController wand)
+    public override void BeginInteraction(GameObject wand)
     {
-        if (wand)
-            base.BeginInteraction(wand);
+        base.BeginInteraction(wand);
 
         // Override interactionPoint using starOffsets
         if (starWand) {
