@@ -54,18 +54,18 @@ public class NetworkEventManager : Photon.PunBehaviour {
                         Dictionary<string, object> cont = (Dictionary<string, object>)content;
 
                         GameObject toSpawn = weaponPrefabs[(byte)cont["spawn"]];
+                        GameObject parent;
 
-                        Transform parent;
                         switch((AttachPoints)cont["attachTo"])
                         {
                             case AttachPoints.RightHand:
-                                parent = pr.right.transform;
+                                parent = pr.right;
                                 break;
                             case AttachPoints.LeftHand:
-                                parent = pr.left.transform;
+                                parent = pr.left;
                                 break;
                             default:
-                                parent = pr.head.transform;
+                                parent = pr.head;
                                 break;
                         }
 
@@ -75,10 +75,9 @@ public class NetworkEventManager : Photon.PunBehaviour {
                         if (toSpawn.name.Contains("Star"))
                             count = 4;
 
-                        Valve.VR.EVRButtonId btn = (Valve.VR.EVRButtonId)cont["grabButton"];
-
-                        InteractObject clone = (InteractObject)Instantiate(toSpawn, parent, false);
-                        clone.InitPickup(wand, count, btn);
+                        GameObject clone = (GameObject)Instantiate(toSpawn, parent.transform, false);
+                        InteractObject intObj = clone.GetComponent<InteractObject>();
+                        intObj.InitNetworkPickup(parent, count);
                     }
                 }
                 break;

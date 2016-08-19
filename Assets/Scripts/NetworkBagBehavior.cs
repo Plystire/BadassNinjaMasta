@@ -59,7 +59,6 @@ public class NetworkBagBehavior : InteractObject
                 toSpawn = 1;
             content.Add("attachTo", att);
             content.Add("spawn", toSpawn);
-            content.Add("grabButton", btn);
             NetworkEventManager.RaiseEvent((byte)NetworkEventManager.EventCodes.SpawnWeapon, content, true, REO);
 
             GameObject newItem = (GameObject)Instantiate(spawnPrefab, wand.transform.position, wand.transform.rotation);

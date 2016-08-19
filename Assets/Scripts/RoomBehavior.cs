@@ -53,10 +53,10 @@ public class RoomBehavior : Photon.PunBehaviour {
         {
             ssc.enabled = true;
         }
-        foreach (ThrowingStar_WandController ssc in player.GetComponentsInChildren<ThrowingStar_WandController>())
-        {
-            ssc.enabled = true;
-        }
+        //foreach (ThrowingStar_WandController ssc in player.GetComponentsInChildren<ThrowingStar_WandController>())
+        //{
+        //    ssc.enabled = true;
+        //}
         foreach (SteamVR_TrackedObject ssc in player.GetComponentsInChildren<SteamVR_TrackedObject>())
         {
             ssc.enabled = true;

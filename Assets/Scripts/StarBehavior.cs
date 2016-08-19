@@ -22,15 +22,6 @@ public class StarBehavior : InteractObject {
         base.Start();
 
         rig = GetComponent<Rigidbody>();
-
-        if (networkMode)
-        {
-            PhotonView pv = GetComponent<PhotonView>();
-            if (pv && pv.isMine)
-            {
-                rig.useGravity = true;
-            }
-        }
 	}
 	
 	// Update is called once per frame
@@ -56,6 +47,14 @@ public class StarBehavior : InteractObject {
         //Debug.Log("Collision! " + col.ToString());
     }
 
+    public override void InitNetworkPickup(GameObject wand, int maxCount)
+    {
+        starWand = wand.GetComponent<ThrowingStar_WandController>();
+        starWand.addStar(this);
+
+        BeginInteraction(null); // No wand
+    }
+
     public override void InitPickup(WandController wand, int maxCount, Valve.VR.EVRButtonId btn)
     {
         // Grab StarWandCtrllr and add our star
@@ -72,7 +71,8 @@ public class StarBehavior : InteractObject {
 
     public override void BeginInteraction(WandController wand)
     {
-        base.BeginInteraction(wand);
+        if (wand)
+            base.BeginInteraction(wand);
 
         // Override interactionPoint using starOffsets
         if (starWand) {
