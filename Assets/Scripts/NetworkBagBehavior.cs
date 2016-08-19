@@ -1,10 +1,11 @@
 ﻿using UnityEngine;
 using System.Collections;
 using Photon;
+using System.Collections.Generic;
 
 public class NetworkBagBehavior : InteractObject
 {
-    public string spawnPrefab;
+    public GameObject spawnPrefab;
     public float spawnDelay = 1f;
 
     public int maxGrab = 1;
@@ -40,14 +41,30 @@ public class NetworkBagBehavior : InteractObject
     {
         if (grabButton != Buttons.Trigger && grabButton != Buttons.Either)
             return;
-        //Debug.Log("Bag - OnTriggerDown");
+        Valve.VR.EVRButtonId btn = Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger;
+        grabItem(wand, btn);
+    }
+    
+    private void grabItem(WandController wand, Valve.VR.EVRButtonId btn) { 
         if (wand.CanInteract(new StarBehavior()) >= 0 && spawnDelayTimer <= 0.0f)
         {
             //Debug.Log("GrabItem!!!");
-            GameObject newItem = PhotonNetwork.Instantiate(spawnPrefab, wand.transform.position, wand.transform.rotation, 0);
+            RaiseEventOptions REO = new RaiseEventOptions();
+            Dictionary<string, object> content = new Dictionary<string, object>();
+            NetworkEventManager.AttachPoints att = NetworkEventManager.AttachPoints.LeftHand;
+            if (wand.name.Contains("right"))
+                att = NetworkEventManager.AttachPoints.RightHand;
+            byte toSpawn = 0;
+            if (spawnPrefab.name.Contains("Kunai"))
+                toSpawn = 1;
+            content.Add("attachTo", att);
+            content.Add("spawn", toSpawn);
+            content.Add("grabButton", btn);
+            NetworkEventManager.RaiseEvent((byte)NetworkEventManager.EventCodes.SpawnWeapon, content, true, REO);
+
+            GameObject newItem = (GameObject)Instantiate(spawnPrefab, wand.transform.position, wand.transform.rotation);
             newItem.name = spawnPrefab + "Clone";
             InteractObject IObj = newItem.GetComponent<InteractObject>();
-            Valve.VR.EVRButtonId btn = Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger;
             IObj.InitPickup(wand, maxGrab, btn);
 
             spawnDelayTimer = spawnDelay;
@@ -58,17 +75,7 @@ public class NetworkBagBehavior : InteractObject
     {
         if (grabButton != Buttons.Grip && grabButton != Buttons.Either)
             return;
-        //Debug.Log("Bag - OnTriggerDown");
-        if (wand.CanInteract(new StarBehavior()) >= 0 && spawnDelayTimer <= 0.0f)
-        {
-            //Debug.Log("GrabItem!!!");
-            GameObject newItem = PhotonNetwork.Instantiate(spawnPrefab, wand.transform.position, wand.transform.rotation, 0);
-            newItem.name = spawnPrefab + "Clone";
-            InteractObject IObj = newItem.GetComponent<InteractObject>();
-            Valve.VR.EVRButtonId btn = Valve.VR.EVRButtonId.k_EButton_Grip;
-            IObj.InitPickup(wand, maxGrab, btn);
-
-            spawnDelayTimer = spawnDelay;
-        }
+        Valve.VR.EVRButtonId btn = Valve.VR.EVRButtonId.k_EButton_Grip;
+        grabItem(wand, btn);
     }
 }
