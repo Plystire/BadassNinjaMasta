@@ -215,78 +215,13 @@ public class InteractObject : MonoBehaviour {
         // Apply orientation and velocities from network
         transform.position = pos;
         transform.rotation = rot;
-        rigidbody.velocity = vel;
-        rigidbody.angularVelocity = avel;
+        rigidbody.velocity = vel * throwingVelocityMultiplier;
+        rigidbody.angularVelocity = avel * throwingVelocityMultiplier;
 
         attachedWand = null;
         currentlyInteracting = false;
 
-        Rigidbody rig = GetComponent<Rigidbody>();
-        if (rig)
-        {
-            rig.velocity *= throwingVelocityMultiplier;
-            rig.angularVelocity *= throwingVelocityMultiplier;
-
-            #region AutoAim
-            if (maxAutoAimAngle > 0)
-            {
-                // ====================================
-                // Auto-aim logic
-                //
-                // Find object with lowest angle offset from our initial trajectory
-                Transform objTrans;
-                GameObject tmpGO = new GameObject();
-                tmpGO.name = "tmpGO";
-                GameObject tmpVelGO = new GameObject();
-                tmpVelGO.name = "tmpVelGO";
-                float diffAngle;
-                float lowestDiff = float.MaxValue;
-                GameObject bestTarget = null;
-
-                // Orient our temp velocity object to aim in the direction of our velocity
-                tmpVelGO.transform.LookAt(transform.position + rig.velocity);
-
-                foreach (GameObject obj in GameObject.FindGameObjectsWithTag("AutoAimTarget"))
-                {   // Filter out best target
-                    objTrans = obj.GetComponentInParent<Transform>();
-                    tmpGO.transform.position = transform.position;
-                    tmpGO.transform.LookAt(objTrans);
-                    diffAngle = Quaternion.Angle(tmpVelGO.transform.rotation, tmpGO.transform.rotation);
-                    if (diffAngle < lowestDiff)
-                    {
-                        lowestDiff = diffAngle;
-                        bestTarget = obj;
-                    }
-                }
-
-                Destroy(tmpGO);
-                Destroy(tmpVelGO);
-
-                // If best target angle is lower than acceptable amount, AUTO-AIM!!!
-                if (bestTarget && lowestDiff <= maxAutoAimAngle)
-                {
-                    //Debug.Log("Found best auto-aim target: " + bestTarget);
-                    // Set velocity to make the shot!
-                    float mag = rig.velocity.magnitude;
-
-                    GameObject go = new GameObject();
-                    go.name = "go";
-                    go.transform.position = transform.position;
-                    float dist = (bestTarget.transform.position - transform.position).magnitude;
-                    float eta = dist / mag;
-                    go.transform.LookAt(bestTarget.transform.position);
-
-                    rig.velocity = go.transform.forward * mag;
-                    rig.velocity += -Physics.gravity * (eta / 2.0f);    // Divide by 2 because we only want to counteract gravity for half of our travel time... that is, we reach our peak at half-time, like we should :)
-                    Destroy(go);
-                }
-                else
-                {
-                    Debug.Log("Failed auto-aim: " + lowestDiff);
-                }
-            }
-            #endregion
-        }
+        AutoAim();
     }
 
     public virtual void EndInteraction(GameObject wand)
@@ -295,20 +230,7 @@ public class InteractObject : MonoBehaviour {
         {   // Update physics to follow attached wand when snapHold, otherwise physics won't be applied
             rigidbody.velocity = deltaPos * velocityFactor * Time.fixedDeltaTime;
             rigidbody.angularVelocity = (Time.fixedDeltaTime * angle * axis) * rotationFactor;
-
-            if (networkMode)
-            {   // Raise network event to inform the masses
-                Dictionary<string, object> content = new Dictionary<string, object>();
-                RaiseEventOptions REO = new RaiseEventOptions();
-                content.Add("pos", transform.position);
-                content.Add("rot", transform.rotation);
-                content.Add("vel", rigidbody.velocity);
-                content.Add("avel", rigidbody.angularVelocity);
-                content.Add("isRight", wand.name.Contains("right"));
-                NetworkEventManager.RaiseEvent((byte)NetworkEventManager.EventCodes.ReleaseWeapon, content, true, REO);
-            }
             
-
 #if DEBUG
             Debug.Log("wandPos: " + attachedWand.transform.position);
             Debug.Log("Pos: " + rigidbody.velocity + " ; delta: " + deltaPos + " ; factor: " + velocityFactor + " ; time: " + Time.fixedDeltaTime);
@@ -317,6 +239,84 @@ public class InteractObject : MonoBehaviour {
         }
         attachedWand = null;
         currentlyInteracting = false;
+
+        rigidbody.velocity *= throwingVelocityMultiplier;
+        rigidbody.angularVelocity *= throwingVelocityMultiplier;
+
+        AutoAim();
+
+        if (networkMode)
+        {   // Raise network event to inform the masses
+            Dictionary<string, object> content = new Dictionary<string, object>();
+            RaiseEventOptions REO = new RaiseEventOptions();
+            content.Add("pos", transform.position);
+            content.Add("rot", transform.rotation);
+            content.Add("vel", rigidbody.velocity);
+            content.Add("avel", rigidbody.angularVelocity);
+            content.Add("isRight", wand.name.Contains("right"));
+            NetworkEventManager.RaiseEvent((byte)NetworkEventManager.EventCodes.ReleaseWeapon, content, true, REO);
+        }
+    }
+
+    private void AutoAim()
+    {
+        if (maxAutoAimAngle > 0)
+        {
+            // ====================================
+            // Auto-aim logic
+            //
+            // Find object with lowest angle offset from our initial trajectory
+            Transform objTrans;
+            GameObject tmpGO = new GameObject();
+            tmpGO.name = "tmpGO";
+            GameObject tmpVelGO = new GameObject();
+            tmpVelGO.name = "tmpVelGO";
+            float diffAngle;
+            float lowestDiff = float.MaxValue;
+            GameObject bestTarget = null;
+
+            // Orient our temp velocity object to aim in the direction of our velocity
+            tmpVelGO.transform.LookAt(transform.position + rigidbody.velocity);
+
+            foreach (GameObject obj in GameObject.FindGameObjectsWithTag("AutoAimTarget"))
+            {   // Filter out best target
+                objTrans = obj.GetComponentInParent<Transform>();
+                tmpGO.transform.position = transform.position;
+                tmpGO.transform.LookAt(objTrans);
+                diffAngle = Quaternion.Angle(tmpVelGO.transform.rotation, tmpGO.transform.rotation);
+                if (diffAngle < lowestDiff)
+                {
+                    lowestDiff = diffAngle;
+                    bestTarget = obj;
+                }
+            }
+
+            Destroy(tmpGO);
+            Destroy(tmpVelGO);
+
+            // If best target angle is lower than acceptable amount, AUTO-AIM!!!
+            if (bestTarget && lowestDiff <= maxAutoAimAngle)
+            {
+                //Debug.Log("Found best auto-aim target: " + bestTarget);
+                // Set velocity to make the shot!
+                float mag = rigidbody.velocity.magnitude;
+
+                GameObject go = new GameObject();
+                go.name = "go";
+                go.transform.position = transform.position;
+                float dist = (bestTarget.transform.position - transform.position).magnitude;
+                float eta = dist / mag;
+                go.transform.LookAt(bestTarget.transform.position);
+
+                rigidbody.velocity = go.transform.forward * mag;
+                rigidbody.velocity += -Physics.gravity * (eta / 2.0f);    // Divide by 2 because we only want to counteract gravity for half of our travel time... that is, we reach our peak at half-time, like we should :)
+                Destroy(go);
+            }
+            else
+            {
+                Debug.Log("Failed auto-aim: " + lowestDiff);
+            }
+        }
     }
 
     public bool IsInteracting()
