@@ -8,7 +8,7 @@ public class RoomBehavior : Photon.PunBehaviour {
 
 	// Use this for initialization
 	void Start () {
-        PhotonNetwork.logLevel = PhotonLogLevel.Full;
+        //PhotonNetwork.logLevel = PhotonLogLevel.Full;
         PhotonNetwork.autoJoinLobby = true;
         PhotonNetwork.ConnectUsingSettings("0.0.1");
 	}

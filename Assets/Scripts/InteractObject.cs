@@ -212,11 +212,16 @@ public class InteractObject : MonoBehaviour {
 
     public virtual void EndInteractionFromNetwork(Vector3 pos, Quaternion rot, Vector3 vel, Vector3 avel)
     {
+        Debug.LogWarning("Throwing Network object!!!!!!!!!!!!!!!!!!!");
+        Debug.LogWarning("Position: " + pos);
+        Debug.LogWarning("Rotation: " + rot);
+        Debug.LogWarning("Velocity: " + vel);
+        Debug.LogWarning("angularVelocity: " + avel);
         // Apply orientation and velocities from network
         transform.position = pos;
         transform.rotation = rot;
-        rigidbody.velocity = vel * throwingVelocityMultiplier;
-        rigidbody.angularVelocity = avel * throwingVelocityMultiplier;
+        rigidbody.velocity = vel;
+        rigidbody.angularVelocity = avel;
 
         attachedWand = null;
         currentlyInteracting = false;
@@ -254,6 +259,11 @@ public class InteractObject : MonoBehaviour {
             content.Add("vel", rigidbody.velocity);
             content.Add("avel", rigidbody.angularVelocity);
             content.Add("isRight", wand.name.Contains("right"));
+            Debug.LogError("Throwing object!!!!!!!!!!!!!!!!!!!");
+            Debug.LogWarning("Position: " + content["pos"]);
+            Debug.LogWarning("Rotation: " + content["rot"]);
+            Debug.LogWarning("Velocity: " + content["vel"]);
+            Debug.LogWarning("angularVelocity: " + content["avel"]);
             NetworkEventManager.RaiseEvent((byte)NetworkEventManager.EventCodes.ReleaseWeapon, content, true, REO);
         }
     }
