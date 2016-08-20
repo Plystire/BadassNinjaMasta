@@ -3,7 +3,7 @@ using System.Collections;
 
 public class CubeBehavior : InteractObject {
 
-    private Renderer renderer;
+    private Renderer cuberenderer;
 
     public Material defMaterial;
     public Material hitMaterial;
@@ -15,7 +15,7 @@ public class CubeBehavior : InteractObject {
 	new void Start () {
         base.Start();
 
-        renderer = GetComponent<Renderer>();
+        cuberenderer = GetComponent<Renderer>();
 
     }
 	
@@ -25,7 +25,7 @@ public class CubeBehavior : InteractObject {
 
         if (flashStart > 0 && flashStop <= Time.time - flashStart)
         {   // Kill the flash
-            renderer.material = defMaterial;
+            cuberenderer.material = defMaterial;
             flashStart = -1;
         }
 	}
@@ -33,7 +33,7 @@ public class CubeBehavior : InteractObject {
     void OnCollisionEnter(Collider col)
     {
         Debug.Log("CubeHit!");
-        renderer.material = hitMaterial;
+        cuberenderer.material = hitMaterial;
         flashStart = Time.time;
     }
 

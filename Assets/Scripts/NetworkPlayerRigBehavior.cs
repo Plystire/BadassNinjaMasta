@@ -5,6 +5,8 @@ public class NetworkPlayerRigBehavior : Photon.PunBehaviour {
 
     public GameObject head;
 
+    private int ID;
+
 	// Use this for initialization
 	void Start () {
 	
@@ -25,7 +27,14 @@ public class NetworkPlayerRigBehavior : Photon.PunBehaviour {
             GameObject right = CM.right;
             GameObject left = CM.left;
 
-            NetworkEventManager.checkInPlayer(info.sender.ID, right, left, head);
+            ID = info.sender.ID;
+            NetworkEventManager.checkInPlayer(ID, right, left, head);
         }
+    }
+
+    void OnDestroy()
+    {
+        // Take this ID off our network list
+        NetworkEventManager.checkOutPlayer(ID);
     }
 }

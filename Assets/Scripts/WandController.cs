@@ -261,7 +261,7 @@ public class WandController : MonoBehaviour {
         //Debug.Log("[dropInteractObject] Count: " + currentIObj.Count);
         if (currentIObj.Count > 0 && currentIObj[0])    // Not null
         {
-            currentIObj[0].EndInteraction(this);   // Drop it
+            currentIObj[0].EndInteraction(gameObject);   // Drop it
             currentIObj.RemoveAt(0);                // Remove from list
 
             if (currentIObj.Count == 0)

@@ -7,11 +7,16 @@ public class NetworkEventManager : Photon.PunBehaviour {
     public List<GameObject> weaponPrefabs;
 
     // Player components
+    struct bodyPart
+    {
+        public GameObject gameObject;
+        public List<InteractObject> attachments;
+    }
     struct playerRig
     {
-        public GameObject right;
-        public GameObject left;
-        public GameObject head;
+        public bodyPart right;
+        public bodyPart left;
+        public bodyPart head;
         public int id;
     }
     private static List<playerRig> playerRigs = new List<playerRig>();
@@ -54,7 +59,7 @@ public class NetworkEventManager : Photon.PunBehaviour {
                         Dictionary<string, object> cont = (Dictionary<string, object>)content;
 
                         GameObject toSpawn = weaponPrefabs[(byte)cont["spawn"]];
-                        GameObject parent;
+                        bodyPart parent;
 
                         switch((AttachPoints)cont["attachTo"])
                         {
@@ -69,15 +74,47 @@ public class NetworkEventManager : Photon.PunBehaviour {
                                 break;
                         }
 
-                        WandController wand = parent.GetComponent<WandController>();
+                        WandController wand = parent.gameObject.GetComponent<WandController>();
 
                         int count = 1;
                         if (toSpawn.name.Contains("Star"))
                             count = 4;
 
-                        GameObject clone = (GameObject)Instantiate(toSpawn, parent.transform, false);
+                        GameObject clone = (GameObject)Instantiate(toSpawn, parent.gameObject.transform, false);
                         InteractObject intObj = clone.GetComponent<InteractObject>();
-                        intObj.InitNetworkPickup(parent, count);
+                        intObj.InitNetworkPickup(parent.gameObject, count);
+
+                        parent.attachments.Add(intObj);
+
+                        break;
+                    }
+                }
+                break;
+
+            case EventCodes.ReleaseWeapon:
+                // Force release of weapon in hand given velocities and orientation
+                foreach(playerRig pr in playerRigs)
+                {
+                    if (pr.id == senderId)
+                    {
+                        Dictionary<string, object> cont = (Dictionary<string, object>)content;
+                        bodyPart wand;
+                        if ((bool)cont["isRight"])
+                        {   // Right hand
+                            wand = pr.right;
+                        } else
+                        {   // Left hand
+                            wand = pr.left;
+                        }
+
+                        // Grab first attachment to bodyPart and release it
+                        if (wand.attachments.Count > 0)
+                        {
+                            wand.attachments[0].EndInteractionFromNetwork((Vector3)cont["pos"], (Quaternion)cont["rot"], (Vector3)cont["vel"], (Vector3)cont["avel"]);   // No wand
+                            wand.attachments.RemoveAt(0);
+                        }
+
+                        break;
                     }
                 }
                 break;
@@ -92,10 +129,22 @@ public class NetworkEventManager : Photon.PunBehaviour {
     public static void checkInPlayer(int ID, GameObject right, GameObject left, GameObject head)
     {   // Track all camera rigs that players instantiate
         playerRig pr = new playerRig();
-        pr.right = right;
-        pr.left = left;
-        pr.head = head;
+        pr.right.gameObject = right;
+        pr.left.gameObject = left;
+        pr.head.gameObject = head;
         pr.id = ID;
         playerRigs.Add(pr);
+    }
+
+    public static void checkOutPlayer(int ID)
+    {   // Track all camera rigs that players instantiate
+        foreach(playerRig pr in playerRigs)
+        {
+            if (pr.id == ID)
+            {
+                playerRigs.Remove(pr);
+                break;
+            }
+        }
     }
 }

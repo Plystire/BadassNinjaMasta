@@ -52,6 +52,23 @@ public class ThrowingStar_WandController : MonoBehaviour {
         }
     }
 
+    public StarBehavior getStar(int ind = -1)
+    {
+        if (ind == -1)
+        {   // Find first star
+            for (int i = 0; i < maxStars; i++)
+            {
+                if (stars[i] != null)
+                    return stars[i];
+            }
+        } else
+        {
+            return stars[ind];
+        }
+
+        return null;
+    }
+
     public void getStarOffsets(StarBehavior star, out Vector3 pos, out Vector3 rot)
     {
         int ind = findStar(star);
