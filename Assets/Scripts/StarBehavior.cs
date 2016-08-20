@@ -100,6 +100,10 @@ public class StarBehavior : InteractObject {
 
     public override void EndInteractionFromNetwork(Vector3 pos, Quaternion rot, Vector3 vel, Vector3 avel)
     {
+        Debug.LogWarning("Threw star!");
+
+        base.EndInteractionFromNetwork(pos, rot, vel, avel);
+
         // Remove star from StarWand
         if (starWand)
         {

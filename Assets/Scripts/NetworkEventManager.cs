@@ -80,7 +80,7 @@ public class NetworkEventManager : Photon.PunBehaviour {
                         if (toSpawn.name.Contains("Star"))
                             count = 4;
 
-                        GameObject clone = (GameObject)Instantiate(toSpawn, parent.gameObject.transform, false);
+                        GameObject clone = (GameObject)Instantiate(toSpawn, null, false);
                         InteractObject intObj = clone.GetComponent<InteractObject>();
                         intObj.InitNetworkPickup(parent.gameObject, count);
 
