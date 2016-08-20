@@ -20,7 +20,6 @@ public class KunaiBehavior : InteractObject {
         base.Start();
 
         rig = GetComponent<Rigidbody>();
-        Debug.Log("Kunai rig: " + rig);
 	}
 	
 	// Update is called once per frame
@@ -52,15 +51,10 @@ public class KunaiBehavior : InteractObject {
             if (state == handleMode.Throw)
             {   // If we threw the kunai, make it face forward, cuz we is NINJA MASTA!
                 Vector3 lookin = rig.velocity;
-                if (lookin.sqrMagnitude >= 4.0f)
+                if (lookin.sqrMagnitude >= 9.0f)
                     transform.LookAt(lookin + transform.position, new Vector3(0, 0, Mathf.Sin(Time.time * Mathf.PI) * 360.0f));
             }
         }
-    }
-
-    void OnCollisionEnter(Collision col)
-    {
-        //Debug.Log("Collision! " + col.ToString());
     }
 
     public override void InitPickup(WandController wand, int maxCount, Valve.VR.EVRButtonId btn)

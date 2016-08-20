@@ -35,11 +35,6 @@ public class StarBehavior : InteractObject {
         }
     }
 
-    public void OnCollisionEnter(Collision col)
-    {
-        Debug.Log("StarCollision! " + col.ToString());
-    }
-
     public override void InitNetworkPickup(GameObject wand, int maxCount)
     {
         starWand = wand.GetComponent<ThrowingStar_WandController>();

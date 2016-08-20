@@ -83,6 +83,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\Scripts\AssassinsBladeBehavior.cs" />
     <Compile Include="Assets\NatureStarterKit2\Standard Assets\Effects\ImageEffects\Scripts\Antialiasing.cs" />
     <Compile Include="Assets\NatureStarterKit2\Standard Assets\Effects\ImageEffects\Scripts\Bloom.cs" />
     <Compile Include="Assets\NatureStarterKit2\Standard Assets\Effects\ImageEffects\Scripts\BloomAndFlares.cs" />
@@ -121,7 +122,6 @@
     <Compile Include="Assets\NatureStarterKit2\Standard Assets\Effects\ImageEffects\Scripts\Twirl.cs" />
     <Compile Include="Assets\NatureStarterKit2\Standard Assets\Effects\ImageEffects\Scripts\VignetteAndChromaticAberration.cs" />
     <Compile Include="Assets\NatureStarterKit2\Standard Assets\Effects\ImageEffects\Scripts\Vortex.cs" />
-    <Compile Include="Assets\Scripts\NetworkPlayerRigBehavior.cs" />
     <Compile Include="Assets\Photon Unity Networking\Demos\Demo2DJumpAndRunWithPhysics\Scripts\Demo2DJumpAndRun.cs" />
     <Compile Include="Assets\Photon Unity Networking\Demos\Demo2DJumpAndRunWithPhysics\Scripts\JumpAndRunMovement.cs" />
     <Compile Include="Assets\Photon Unity Networking\Demos\DemoBoxes\ColorPerPlayer.cs" />
@@ -266,6 +266,7 @@
     <Compile Include="Assets\Scripts\KunaiBehavior.cs" />
     <Compile Include="Assets\Scripts\NetworkBagBehavior.cs" />
     <Compile Include="Assets\Scripts\NetworkEventManager.cs" />
+    <Compile Include="Assets\Scripts\NetworkPlayerRigBehavior.cs" />
     <Compile Include="Assets\Scripts\PlayerBodyBehavior.cs" />
     <Compile Include="Assets\Scripts\PlayerTeleportController.cs" />
     <Compile Include="Assets\Scripts\ResetInteract.cs" />
