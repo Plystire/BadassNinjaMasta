@@ -1,6 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2015
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BadassNinjaMasta.CSharp.Plugins", "BadassNinjaMasta.CSharp.Plugins.csproj", "{C8FE8243-C9A2-4961-7766-0BAE1BF8CA45}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BadassNinjaMasta.CSharp", "BadassNinjaMasta.CSharp.csproj", "{C0962CB5-72AE-5A41-B5D8-74EF1C54C989}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BadassNinjaMasta.CSharp.Editor", "BadassNinjaMasta.CSharp.Editor.csproj", "{A35355B4-1598-85DB-FF5D-E385F3CAB60D}"
@@ -11,6 +13,10 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C8FE8243-C9A2-4961-7766-0BAE1BF8CA45}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C8FE8243-C9A2-4961-7766-0BAE1BF8CA45}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C8FE8243-C9A2-4961-7766-0BAE1BF8CA45}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C8FE8243-C9A2-4961-7766-0BAE1BF8CA45}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C0962CB5-72AE-5A41-B5D8-74EF1C54C989}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{C0962CB5-72AE-5A41-B5D8-74EF1C54C989}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C0962CB5-72AE-5A41-B5D8-74EF1C54C989}.Release|Any CPU.ActiveCfg = Release|Any CPU

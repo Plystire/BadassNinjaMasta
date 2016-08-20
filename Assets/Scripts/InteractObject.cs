@@ -13,6 +13,11 @@ public class InteractObject : MonoBehaviour {
 
     private Transform interactionPoint;
     
+    public bool networkMode = false;
+
+    public float maxAutoAimAngle = 10.0f;
+    public float throwingVelocityMultiplier = 1.0f;
+
     private float velocityFactor = 20000.0f;
     public float GetVelocityFactor() { return velocityFactor; }
     private Vector3 deltaPos;
@@ -112,8 +117,8 @@ public class InteractObject : MonoBehaviour {
                     Rigidbody rig = GetComponent<Rigidbody>();
                     if (rig)
                     {
-                        rig.velocity = new Vector3();
-                        rig.angularVelocity = new Vector3();
+                        rig.velocity = Vector3.zero;
+                        rig.angularVelocity = Vector3.zero;
                     }
 
                     // Track our deltas for when we let go
@@ -159,19 +164,24 @@ public class InteractObject : MonoBehaviour {
         }
     }
 
+    public virtual void InitNetworkPickup(GameObject wand, int maxCount)
+    {
+        BeginInteraction(wand);
+    }
+
     public virtual void InitPickup(WandController wand, int maxCount, Valve.VR.EVRButtonId btn)
     {
         wand.pickupObject(this, maxCount, btn);
     }
 
-    public virtual void BeginInteraction(WandController wand)
+    public virtual void BeginInteraction(GameObject wand)
     {
         if (wand)
         {
             if(interactionPoint == null)
                 interactionPoint = new GameObject().transform;  // If we lost it, make a new one
 
-            attachedWand = wand;
+            attachedWand = wand.GetComponent<WandController>();
             interactionPoint.position = wand.transform.position;
             interactionPoint.rotation = wand.transform.rotation;
             interactionPoint.SetParent(wand.transform, true);
@@ -179,7 +189,8 @@ public class InteractObject : MonoBehaviour {
             currentlyInteracting = true;
 
             // Start timer for sticky pickup
-            wand.stickyPickup(stickyPickup);
+            if (attachedWand)
+                attachedWand.stickyPickup(stickyPickup);
         }
     }
 
@@ -199,13 +210,32 @@ public class InteractObject : MonoBehaviour {
             interactionPoint.localRotation = Quaternion.Euler(rot);
     }
 
-    public virtual void EndInteraction(WandController wand)
+    public virtual void EndInteractionFromNetwork(Vector3 pos, Quaternion rot, Vector3 vel, Vector3 avel)
+    {
+        Debug.LogWarning("Throwing Network object!!!!!!!!!!!!!!!!!!!");
+        Debug.LogWarning("Position: " + pos);
+        Debug.LogWarning("Rotation: " + rot);
+        Debug.LogWarning("Velocity: " + vel);
+        Debug.LogWarning("angularVelocity: " + avel);
+        // Apply orientation and velocities from network
+        transform.position = pos;
+        transform.rotation = rot;
+        rigidbody.velocity = vel;
+        rigidbody.angularVelocity = avel;
+
+        attachedWand = null;
+        currentlyInteracting = false;
+
+        AutoAim();
+    }
+
+    public virtual void EndInteraction(GameObject wand)
     {
         if (IsInteracting() && snapHold)
         {   // Update physics to follow attached wand when snapHold, otherwise physics won't be applied
             rigidbody.velocity = deltaPos * velocityFactor * Time.fixedDeltaTime;
             rigidbody.angularVelocity = (Time.fixedDeltaTime * angle * axis) * rotationFactor;
-
+            
 #if DEBUG
             Debug.Log("wandPos: " + attachedWand.transform.position);
             Debug.Log("Pos: " + rigidbody.velocity + " ; delta: " + deltaPos + " ; factor: " + velocityFactor + " ; time: " + Time.fixedDeltaTime);
@@ -214,6 +244,89 @@ public class InteractObject : MonoBehaviour {
         }
         attachedWand = null;
         currentlyInteracting = false;
+
+        rigidbody.velocity *= throwingVelocityMultiplier;
+        rigidbody.angularVelocity *= throwingVelocityMultiplier;
+
+        AutoAim();
+
+        if (networkMode)
+        {   // Raise network event to inform the masses
+            Dictionary<string, object> content = new Dictionary<string, object>();
+            RaiseEventOptions REO = new RaiseEventOptions();
+            content.Add("pos", transform.position);
+            content.Add("rot", transform.rotation);
+            content.Add("vel", rigidbody.velocity);
+            content.Add("avel", rigidbody.angularVelocity);
+            content.Add("isRight", wand.name.Contains("right"));
+            Debug.LogError("Throwing object!!!!!!!!!!!!!!!!!!!");
+            Debug.LogWarning("Position: " + content["pos"]);
+            Debug.LogWarning("Rotation: " + content["rot"]);
+            Debug.LogWarning("Velocity: " + content["vel"]);
+            Debug.LogWarning("angularVelocity: " + content["avel"]);
+            NetworkEventManager.RaiseEvent((byte)NetworkEventManager.EventCodes.ReleaseWeapon, content, true, REO);
+        }
+    }
+
+    private void AutoAim()
+    {
+        if (maxAutoAimAngle > 0)
+        {
+            // ====================================
+            // Auto-aim logic
+            //
+            // Find object with lowest angle offset from our initial trajectory
+            Transform objTrans;
+            GameObject tmpGO = new GameObject();
+            tmpGO.name = "tmpGO";
+            GameObject tmpVelGO = new GameObject();
+            tmpVelGO.name = "tmpVelGO";
+            float diffAngle;
+            float lowestDiff = float.MaxValue;
+            GameObject bestTarget = null;
+
+            // Orient our temp velocity object to aim in the direction of our velocity
+            tmpVelGO.transform.LookAt(transform.position + rigidbody.velocity);
+
+            foreach (GameObject obj in GameObject.FindGameObjectsWithTag("AutoAimTarget"))
+            {   // Filter out best target
+                objTrans = obj.GetComponentInParent<Transform>();
+                tmpGO.transform.position = transform.position;
+                tmpGO.transform.LookAt(objTrans);
+                diffAngle = Quaternion.Angle(tmpVelGO.transform.rotation, tmpGO.transform.rotation);
+                if (diffAngle < lowestDiff)
+                {
+                    lowestDiff = diffAngle;
+                    bestTarget = obj;
+                }
+            }
+
+            Destroy(tmpGO);
+            Destroy(tmpVelGO);
+
+            // If best target angle is lower than acceptable amount, AUTO-AIM!!!
+            if (bestTarget && lowestDiff <= maxAutoAimAngle)
+            {
+                //Debug.Log("Found best auto-aim target: " + bestTarget);
+                // Set velocity to make the shot!
+                float mag = rigidbody.velocity.magnitude;
+
+                GameObject go = new GameObject();
+                go.name = "go";
+                go.transform.position = transform.position;
+                float dist = (bestTarget.transform.position - transform.position).magnitude;
+                float eta = dist / mag;
+                go.transform.LookAt(bestTarget.transform.position);
+
+                rigidbody.velocity = go.transform.forward * mag;
+                rigidbody.velocity += -Physics.gravity * (eta / 2.0f);    // Divide by 2 because we only want to counteract gravity for half of our travel time... that is, we reach our peak at half-time, like we should :)
+                Destroy(go);
+            }
+            else
+            {
+                Debug.Log("Failed auto-aim: " + lowestDiff);
+            }
+        }
     }
 
     public bool IsInteracting()

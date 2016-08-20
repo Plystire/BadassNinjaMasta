@@ -8,12 +8,7 @@ public class StarBehavior : InteractObject {
 
     private ThrowingStar_WandController starWand;
 
-    public float maxAutoAimAngle = 10.0f;
-    public float throwingVelocityMultiplier = 1.0f;
-
     public float lifeSpan = 5.0f;
-    
-    private GameObject autoAimTarget = null;
 
     // Use this for initialization
     new void Start () {
@@ -40,9 +35,12 @@ public class StarBehavior : InteractObject {
         }
     }
 
-    void OnCollisionEnter(Collision col)
+    public override void InitNetworkPickup(GameObject wand, int maxCount)
     {
-        //Debug.Log("Collision! " + col.ToString());
+        starWand = wand.GetComponent<ThrowingStar_WandController>();
+        starWand.addStar(this);
+
+        BeginInteraction(wand);
     }
 
     public override void InitPickup(WandController wand, int maxCount, Valve.VR.EVRButtonId btn)
@@ -59,7 +57,7 @@ public class StarBehavior : InteractObject {
         InitPickup(wand, 4, Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger);
     }
 
-    public override void BeginInteraction(WandController wand)
+    public override void BeginInteraction(GameObject wand)
     {
         base.BeginInteraction(wand);
 
@@ -95,74 +93,33 @@ public class StarBehavior : InteractObject {
         }
     }
 
-    public override void EndInteraction(WandController wand)
+    public override void EndInteractionFromNetwork(Vector3 pos, Quaternion rot, Vector3 vel, Vector3 avel)
+    {
+        Debug.LogWarning("Threw star!");
+
+        base.EndInteractionFromNetwork(pos, rot, vel, avel);
+
+        // Remove star from StarWand
+        if (starWand)
+        {
+            starWand.removeStar(this);
+            starWand = null;
+        }
+
+        // Set to active physics object
+        Rigidbody rigidbody = GetComponent<Rigidbody>();
+        if (rigidbody)
+        {
+            rigidbody.detectCollisions = true;
+            rigidbody.isKinematic = false;
+        }
+    }
+
+    public override void EndInteraction(GameObject wand)
     {
         bool wasInteracting = IsInteracting();
-
+        
         base.EndInteraction(wand);
-
-        if (wasInteracting)
-        {   // Provide throwingMultiplier impulse boost
-            Rigidbody rig = GetComponent<Rigidbody>();
-            if (rig)
-            {
-                rig.velocity *= throwingVelocityMultiplier;
-                rig.angularVelocity *= throwingVelocityMultiplier;
-            }
-
-            #region AutoAim
-            // ====================================
-            // Auto-aim logic
-            //
-            // Find object with lowest angle offset from our initial trajectory
-            Transform objTrans;
-            GameObject tmpGO = new GameObject();
-            GameObject tmpVelGO = new GameObject();
-            float diffAngle;
-            float lowestDiff = float.MaxValue;
-            GameObject bestTarget = null;
-            
-            // Orient our temp velocity object to aim in the direction of our velocity
-            tmpVelGO.transform.LookAt(transform.position + rig.velocity);
-
-            foreach (GameObject obj in GameObject.FindGameObjectsWithTag("AutoAimTarget"))
-            {   // Filter out best target
-                objTrans = obj.GetComponentInParent<Transform>();
-                tmpGO.transform.position = transform.position;
-                tmpGO.transform.LookAt(objTrans);
-                diffAngle = Quaternion.Angle(tmpVelGO.transform.rotation, tmpGO.transform.rotation);
-                if (diffAngle < lowestDiff)
-                {
-                    lowestDiff = diffAngle;
-                    bestTarget = obj;
-                }
-            }
-
-            Destroy(tmpGO);
-            Destroy(tmpVelGO);
-
-            // If best target angle is lower than acceptable amount, AUTO-AIM!!!
-            if (bestTarget && lowestDiff <= maxAutoAimAngle)
-            {
-                //Debug.Log("Found best auto-aim target: " + bestTarget);
-                autoAimTarget = bestTarget;
-                // Set velocity to make the shot!
-                float mag = rig.velocity.magnitude;
-
-                GameObject go = new GameObject();
-                go.transform.position = transform.position;
-                float dist = (autoAimTarget.transform.position - transform.position).magnitude;
-                float eta = dist / mag;
-                go.transform.LookAt(autoAimTarget.transform.position);
-                
-                rig.velocity = go.transform.forward * mag;
-                rig.velocity += -Physics.gravity * (eta / 2.0f);    // Divide by 2 because we only want to counteract gravity for half of our travel time... that is, we reach our peak at half-time, like we should :)
-            } else
-            {
-                Debug.Log("Failed auto-aim: " + lowestDiff);
-            }
-            #endregion
-        }
 
         // Remove star from StarWand
         if (starWand)
