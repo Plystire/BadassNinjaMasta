@@ -130,8 +130,11 @@ public class NetworkEventManager : Photon.PunBehaviour {
     {   // Track all camera rigs that players instantiate
         playerRig pr = new playerRig();
         pr.right.gameObject = right;
+        pr.right.attachments = new List<InteractObject>();
         pr.left.gameObject = left;
+        pr.left.attachments = new List<InteractObject>();
         pr.head.gameObject = head;
+        pr.head.attachments = new List<InteractObject>();
         pr.id = ID;
         playerRigs.Add(pr);
     }
