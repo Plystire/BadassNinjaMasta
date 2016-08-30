@@ -11,14 +11,14 @@ public class StarBehavior : InteractObject {
     public float lifeSpan = 5.0f;
 
     // Use this for initialization
-    new void Start () {
+    public override void Start () {
         base.Start();
 
         rig = GetComponent<Rigidbody>();
 	}
-	
-	// Update is called once per frame
-	new void Update ()
+
+    // Update is called once per frame
+    public override void Update ()
     {
         base.Update();
         if (IsInteracting())

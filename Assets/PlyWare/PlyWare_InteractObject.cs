@@ -3,27 +3,23 @@ using System.Collections;
 using System.Collections.Generic;
 using System;
 
-public class InteractObject : MonoBehaviour {
+public class PlyWare_InteractObject : MonoBehaviour
+{
 
     new private Rigidbody rigidbody;
 
     private bool currentlyInteracting = false;
 
-    private WandController attachedWand;
+    private PlyWare_WandController attachedWand;
 
     private Transform interactionPoint;
-    
-    public bool networkMode = false;
-
-    public float maxAutoAimAngle = 10.0f;
-    public float throwingVelocityMultiplier = 1.0f;
 
     private float velocityFactor = 20000.0f;
     public float GetVelocityFactor() { return velocityFactor; }
     private Vector3 deltaPos;
     private Vector3 lastPos;
     public Vector3 GetDeltaPos() { return deltaPos; }
-    private float rotationFactor = 200000.0f;
+    private float rotationFactor = 360.0f;
     public float GetRotationFactor() { return rotationFactor; }
     private Quaternion deltaRot;
     private Quaternion lastRot;
@@ -33,23 +29,82 @@ public class InteractObject : MonoBehaviour {
 
     // PUBLICS
     //
+    // If this object is to act as a network-controlled object
+    public bool networkMode = false;
+
+    // Button to use for picking up this object
+    public Valve.VR.EVRButtonId pickupButton;
+
+    // Max angle from target at which auto-aim will trigger
+    public float maxAutoAimAngle = 10.0f;
+    // Min velocity at which auto-aim will trigger
+    public float minAutoAimVelocity = 5.0f;
+    // Velocity multiplier for throwing this object
+    public float throwingVelocityMultiplier = 1.0f;
+
     // Time in seconds that sticky pickup will occur
     public float stickyPickup = 0.0f;
-    //
-    // will object lag behind based on mass or will it snap onto wand
-    public bool snapHold = false;
+
+    // will object lag behind based on mass or will it snap onto interactPoint
+    public bool snapPosition = false;
     public bool snapRotation = false;
 
-    public bool usingJoint = false;
+    // Should we attach to wand joint instead of matching position?
+    public enum Joints
+    {
+        None, Fixed, Spring
+    }
+    public Joints usingJoint = Joints.Spring;
 
-    virtual public void OnTriggerDown(WandController wand) { }
-    virtual public void OnTriggerUp(WandController wand) { }
+    private Joint attachJoint;
+    public Joint attachedJoint
+    {
+        get
+        {
+            return attachJoint;
+        }
 
-    virtual public void OnGripDown(WandController wand) { }
-    virtual public void OnGripUp(WandController wand) { }
+        set
+        {   
+            // Remove from previous attached joint
+            if (attachJoint)
+            {
+                attachJoint.connectedBody = null;
+                attachJoint = null;
+            }
+            if (value)
+            {   // Attach to new joint
+                if (!rigidbody)
+                    rigidbody = GetComponent<Rigidbody>();
+                value.connectedBody = rigidbody;
+                attachJoint = value;
+            }
+        }
+    }
 
-    // Use this for initialization
-    public virtual void Start () {
+    /// <summary>
+    /// Called when wand has collided with object and pressed down a button.
+    /// </summary>
+    /// <param name="wand">Wand that has pressed the button</param>
+    /// <param name="btn">Button that was pressed</param>
+    virtual public void WandButtonDown(PlyWare_WandController wand, Valve.VR.EVRButtonId btn)
+    {
+        if (btn == pickupButton)        // Pickup object when we press our pickup button
+            InitPickup(wand, 1, btn);
+    }
+    /// <summary>
+    /// Called when wand has collided with object and released a button.
+    /// </summary>
+    /// <param name="wand">Wand that is releasing the button</param>
+    /// <param name="btn">Button that was released</param>
+    virtual public void WandButtonUp(PlyWare_WandController wand, Valve.VR.EVRButtonId btn)
+    { }
+
+    /// <summary>
+    /// Use this for initialization
+    /// </summary>
+    public virtual void Start()
+    {
         rigidbody = GetComponent<Rigidbody>();
         //interactionPoint = new GameObject().transform;
         if (rigidbody)
@@ -57,7 +112,8 @@ public class InteractObject : MonoBehaviour {
             rigidbody.interpolation = RigidbodyInterpolation.Interpolate;
             velocityFactor /= rigidbody.mass;
             rotationFactor /= rigidbody.mass;
-        }else
+        }
+        else
         {
             //Debug.LogError("InteractObject[" + name + "]: Initialized with no Rigidbody");
         }
@@ -66,21 +122,27 @@ public class InteractObject : MonoBehaviour {
         lastRot = new Quaternion();
     }
 
+    /// <summary>
+    /// Use this to Update things each frame
+    /// </summary>
     public virtual void Update()
     {
         // Do update stuff
     }
-	
-	// Update is called once per frame
-	public virtual void FixedUpdate () {
+
+    /// <summary>
+    /// Use this to Update things when physics update
+    /// </summary>
+    public virtual void FixedUpdate()
+    {
         if (currentlyInteracting)
         {
             if (!rigidbody)
                 rigidbody = GetComponent<Rigidbody>();
-            if (!usingJoint)
+            if (usingJoint == Joints.None)
             {
-                if (!snapHold)
-                {   // Update physics to follow attached wand
+                if (!snapPosition)
+                {   // Update physics to follow attached wand, or attach directly
                     deltaPos = interactionPoint.position - transform.position;
                     if (deltaPos.sqrMagnitude < 0.001)
                     {   // Snap to controller if our distance is low enough (Prevents velocity flicker)
@@ -91,71 +153,86 @@ public class InteractObject : MonoBehaviour {
                     {   // Transition to our desired position via velocity
                         rigidbody.velocity = deltaPos * velocityFactor * Time.fixedDeltaTime;
                     }
-
-                    if (!snapRotation)
-                    {
-                        deltaRot = interactionPoint.rotation * Quaternion.Inverse(transform.rotation);
-                        deltaRot.ToAngleAxis(out angle, out axis);
-
-                        if (angle < 1 && angle > -1)
-                        {   // Snap to controller is our distance is low enough (Prevent velocity flicker)
-                            transform.rotation = interactionPoint.rotation;
-                            rigidbody.angularVelocity = new Vector3();
-                        }
-                        else
-                        {   // Transition to our desired rotation
-                            if (angle > 180)
-                            {
-                                angle -= 360;
-                            }
-                            else if (angle < -180)    // Only you can prevent wrap jump
-                            {
-                                angle += 360;
-                            }
-
-                            rigidbody.angularVelocity = (Time.fixedDeltaTime * angle * axis) * rotationFactor;
-                        }
-                    }
-                }
-                else
-                {   // Snap to wand
+                } else
+                {   // Snap position
                     transform.position = interactionPoint.position;
+                    if (rigidbody)
+                    {   // Reset velocity
+                        rigidbody.velocity = Vector3.zero;
+                    }
+
+                    // Track our deltas for when we let go
+                    deltaPos = transform.position - lastPos;
+                    lastPos = transform.position;
+                }
+
+                if (!snapRotation)
+                {   // Update physics to follow attached wand, or attach directly
+                    deltaRot = interactionPoint.rotation * Quaternion.Inverse(transform.rotation);
+                    deltaRot.ToAngleAxis(out angle, out axis);
+
+                    if (angle < 1 && angle > -1)
+                    {   // Snap to controller is our distance is low enough (Prevent velocity flicker)
+                        transform.rotation = interactionPoint.rotation;
+                        rigidbody.angularVelocity = new Vector3();
+                    }
+                    else
+                    {   // Transition to our desired rotation
+                        if (angle > 180)
+                        {
+                            angle -= 360;
+                        }
+                        else if (angle < -180)    // Only you can prevent wrap jump
+                        {
+                            angle += 360;
+                        }
+
+                        rigidbody.angularVelocity = (Time.fixedDeltaTime * angle * axis) * rotationFactor;
+                    }
+                } else
+                {   // Snap to interactPOint
                     transform.rotation = interactionPoint.rotation;
 
                     // If we have a rigidbody, ensure our velocities are reset so forces do not accumulate
                     if (rigidbody)
                     {
-                        rigidbody.velocity = Vector3.zero;
                         rigidbody.angularVelocity = Vector3.zero;
                     }
-
-                    // Track our deltas for when we let go
-                    deltaPos = transform.position - lastPos;
 
                     deltaRot = transform.rotation * Quaternion.Inverse(lastRot);
                     deltaRot.ToAngleAxis(out angle, out axis);
 
-                    lastPos = transform.position;
                     lastRot = transform.rotation;
                 }
+            } else
+            {   // When using joints
+                switch(usingJoint)
+                {
+                    case Joints.Fixed:
+                        // Track deltas for release of fixed joint
+                        deltaPos = transform.position - lastPos;
+                        lastPos = transform.position;
 
-                if (snapRotation)
-                    transform.rotation = interactionPoint.rotation;
+                        deltaRot = transform.rotation * Quaternion.Inverse(lastRot);
+                        deltaRot.ToAngleAxis(out angle, out axis);
+                        lastRot = transform.rotation;
+                        break;
+                }
             }
         }
-	}
+    }
 
     private List<GameObject> destroyList = new List<GameObject>();
 
     /// <summary>
     /// Destroy obj when this object is destroyed
     /// </summary>
-    /// <param name="obj"></param>
+    /// <param name="obj">Object to destroy</param>
     public void DestroyObjectOnDestroy(GameObject obj)
     {   // Add to destroy list
         destroyList.Add(obj);
     }
-    
+
     void OnDestroy()
     {
         if (interactionPoint)
@@ -170,7 +247,8 @@ public class InteractObject : MonoBehaviour {
                 try
                 {
                     Destroy(obj.gameObject);
-                } catch(Exception) { }  // If we fail, don't worry. It may have been destroyed at some other point
+                }
+                catch (Exception) { }  // If we fail, don't worry. It may have been destroyed at some other point
             }
         }
     }
@@ -180,7 +258,7 @@ public class InteractObject : MonoBehaviour {
         BeginInteraction(wand);
     }
 
-    public virtual void InitPickup(WandController wand, int maxCount, Valve.VR.EVRButtonId btn)
+    public virtual void InitPickup(PlyWare_WandController wand, int maxCount, Valve.VR.EVRButtonId btn)
     {
         wand.pickupObject(this, maxCount, btn);
     }
@@ -189,19 +267,37 @@ public class InteractObject : MonoBehaviour {
     {
         if (wand)
         {
-            if(interactionPoint == null)
-                interactionPoint = new GameObject().transform;  // If we lost it, make a new one
+            attachedWand = wand.GetComponent<PlyWare_WandController>();
 
-            attachedWand = wand.GetComponent<WandController>();
-            interactionPoint.position = wand.transform.position;
-            interactionPoint.rotation = wand.transform.rotation;
-            interactionPoint.SetParent(wand.transform, true);
+            // Attach to specified joint
+            if (attachedWand)
+            {
+                switch (usingJoint)
+                {
+                    case Joints.Fixed:
+                        attachedJoint = attachedWand.fixedJoint;
+                        //attachedWand.fixedJoint.connectedBody = rigidbody;
+                        break;
+                    case Joints.Spring:
+                        attachedJoint = attachedWand.springJoint;
+                        //attachedWand.springJoint.connectedBody = rigidbody;
+                        break;
+                    default:
+                        // When not a joint
+                        if (interactionPoint == null)
+                            interactionPoint = new GameObject().transform;  // If we lost it, make a new one
+
+                        interactionPoint.position = transform.position;     // Set to our current orientation
+                        interactionPoint.rotation = transform.rotation;
+                        interactionPoint.SetParent(wand.transform, true);   // Set to follow wand, so we can follow this
+                        break;
+                }
+
+                // Start timer for sticky pickup
+                attachedWand.stickyPickup(stickyPickup);
+            }
 
             currentlyInteracting = true;
-
-            // Start timer for sticky pickup
-            if (attachedWand)
-                attachedWand.stickyPickup(stickyPickup);
         }
     }
 
@@ -240,28 +336,49 @@ public class InteractObject : MonoBehaviour {
         attachedWand = null;
         currentlyInteracting = false;
 
-        AutoAim();
+        //AutoAim();    // I don't think we need to run AutoAim on receiving client, do we? The other client has already performed autoaim
     }
 
     public virtual void EndInteraction(GameObject wand)
     {
+        bool applyPhysics = true;
+
         if (!rigidbody)
             rigidbody = GetComponent<Rigidbody>();
 
-        if (IsInteracting() && snapHold)
-        {   // Update physics to follow attached wand when snapHold, otherwise physics won't be applied
+        // Dettach from specified joint
+        switch (usingJoint)
+        {
+            case Joints.Fixed:
+                attachedWand.fixedJoint.connectedBody = null;
+                break;
+            case Joints.Spring:
+                attachedWand.springJoint.connectedBody = null;
+                applyPhysics = false;
+                break;
+            default:
+                // When not a joint
+                break;
+        }
+
+        if (applyPhysics)
+        {   // Apply direct physics to our object based on past values
             rigidbody.velocity = deltaPos * velocityFactor * Time.fixedDeltaTime;
             rigidbody.angularVelocity = (Time.fixedDeltaTime * angle * axis) * rotationFactor;
-            
-#if DEBUG
-            Debug.Log("wandPos: " + attachedWand.transform.position);
-            Debug.Log("Pos: " + rigidbody.velocity + " ; delta: " + deltaPos + " ; factor: " + velocityFactor + " ; time: " + Time.fixedDeltaTime);
-            Debug.Log("Rot: " + rigidbody.angularVelocity);
-#endif
         }
+
+#if DEBUG
+        Debug.Log("EndInteraction:");
+        Debug.Log("wandPos: " + attachedWand.transform.position);
+        Debug.Log("Pos: " + rigidbody.velocity + " ; delta: " + deltaPos + " ; factor: " + velocityFactor + " ; time: " + Time.fixedDeltaTime);
+        Debug.Log("Rot: " + rigidbody.angularVelocity);
+#endif
+
+        // Stop interacting
         attachedWand = null;
         currentlyInteracting = false;
 
+        // Apply throwing multiplier
         rigidbody.velocity *= throwingVelocityMultiplier;
         rigidbody.angularVelocity *= throwingVelocityMultiplier;
 
@@ -287,7 +404,7 @@ public class InteractObject : MonoBehaviour {
 
     private void AutoAim()
     {
-        if (maxAutoAimAngle > 0)
+        if (maxAutoAimAngle > 0 & minAutoAimVelocity > 0)
         {
             // ====================================
             // Auto-aim logic
@@ -337,6 +454,7 @@ public class InteractObject : MonoBehaviour {
 
                 rigidbody.velocity = go.transform.forward * mag;
                 rigidbody.velocity += -Physics.gravity * (eta / 2.0f);    // Divide by 2 because we only want to counteract gravity for half of our travel time... that is, we reach our peak at half-time, like we should :)
+
                 Destroy(go);
             }
             else
@@ -351,7 +469,7 @@ public class InteractObject : MonoBehaviour {
         return currentlyInteracting;
     }
 
-    public WandController GetAttachedWand()
+    public PlyWare_WandController GetAttachedWand()
     {
         return attachedWand;
     }

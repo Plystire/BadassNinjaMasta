@@ -16,14 +16,14 @@ public class KunaiBehavior : InteractObject {
     private handleMode state = handleMode.Block;
 
     // Use this for initialization
-    new void Start () {
+    public override void Start () {
         base.Start();
 
         rig = GetComponent<Rigidbody>();
 	}
-	
-	// Update is called once per frame
-	new void Update ()
+
+    // Update is called once per frame
+    public override void Update ()
     {
         base.Update();
         if (IsInteracting())
@@ -41,7 +41,7 @@ public class KunaiBehavior : InteractObject {
         }
     }
 
-    new void FixedUpdate()
+    public override void FixedUpdate()
     {
         base.FixedUpdate();
 

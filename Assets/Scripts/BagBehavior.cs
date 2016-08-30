@@ -17,7 +17,7 @@ public class BagBehavior : InteractObject
         Trigger, Grip, Either
     }
 
-    new void Start()
+    public override void Start()
     {
         base.Start();
 
@@ -25,7 +25,7 @@ public class BagBehavior : InteractObject
         spawnDelayTimer = 0f;
     }
 
-    new void Update()
+    public override void Update()
     {
         base.Update();
 

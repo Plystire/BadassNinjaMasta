@@ -11,16 +11,16 @@ public class CubeBehavior : InteractObject {
     public float flashStop = 0.15f;
     private float flashStart = -1;
 
-	// Use this for initialization
-	new void Start () {
+    // Use this for initialization
+    public override void Start () {
         base.Start();
 
         cuberenderer = GetComponent<Renderer>();
 
     }
-	
-	// Update is called once per frame
-	new void Update () {
+
+    // Update is called once per frame
+    public override void Update () {
         base.Update();
 
         if (flashStart > 0 && flashStop <= Time.time - flashStart)

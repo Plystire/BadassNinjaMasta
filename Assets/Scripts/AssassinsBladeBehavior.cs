@@ -1,15 +1,13 @@
 ﻿using UnityEngine;
 using System.Collections;
+using Valve.VR;
+using System.Collections.Generic;
 
-public class AssassinsBladeBehavior : MonoBehaviour {
+public class AssassinsBladeBehavior : SheathWeapon {
+
 
 	// Use this for initialization
-	void Start () {
-	
-	}
-	
-	// Update is called once per frame
-	void Update () {
-	
+	new void Start () {
+        base.Start();
 	}
 }
