@@ -32,23 +32,17 @@ public class PlyWare_InteractObject : MonoBehaviour
     // If this object is to act as a network-controlled object
     public bool networkMode = false;
 
+    [Space(10)]
+    [Header("Pickup options")]
+    // Can this object be picked up
+    public bool canPickup = true;
     // Button to use for picking up this object
     public Valve.VR.EVRButtonId pickupButton;
-
-    // Max angle from target at which auto-aim will trigger
-    public float maxAutoAimAngle = 10.0f;
-    // Min velocity at which auto-aim will trigger
-    public float minAutoAimVelocity = 5.0f;
-    // Velocity multiplier for throwing this object
-    public float throwingVelocityMultiplier = 1.0f;
-
     // Time in seconds that sticky pickup will occur
     public float stickyPickup = 0.0f;
-
     // will object lag behind based on mass or will it snap onto interactPoint
     public bool snapPosition = false;
     public bool snapRotation = false;
-
     // Should we attach to wand joint instead of matching position?
     public enum Joints
     {
@@ -56,9 +50,25 @@ public class PlyWare_InteractObject : MonoBehaviour
     }
     public Joints usingJoint = Joints.Spring;
 
+    [Space(10)]
+    [Header("Throwing options")]
+    // Max angle from target at which auto-aim will trigger
+    public float maxAutoAimAngle = 10.0f;
+    // Min velocity at which auto-aim will trigger
+    public float minAutoAimVelocity = 5.0f;
+    /// <summary>
+    /// Velocity multiplier for throwing this object
+    /// </summary>
+    public float throwingVelocityMultiplier = 1.0f;
+
+
+
     private Joint attachJoint;
+    /// <summary>
+    /// Can use this to attach/dettach to/from joints
+    /// </summary>
     public Joint attachedJoint
-    {
+    {   // 
         get
         {
             return attachJoint;
@@ -89,7 +99,7 @@ public class PlyWare_InteractObject : MonoBehaviour
     /// <param name="btn">Button that was pressed</param>
     virtual public void WandButtonDown(PlyWare_WandController wand, Valve.VR.EVRButtonId btn)
     {
-        if (btn == pickupButton)        // Pickup object when we press our pickup button
+        if (canPickup && btn == pickupButton)        // Pickup object when we press our pickup button
             InitPickup(wand, 1, btn);
     }
     /// <summary>

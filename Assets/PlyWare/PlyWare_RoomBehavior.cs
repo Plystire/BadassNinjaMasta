@@ -2,7 +2,7 @@
 using System.Collections;
 using Photon;
 
-public class RoomBehavior : Photon.PunBehaviour {
+public class PlyWare_RoomBehavior : Photon.PunBehaviour {
 
     private GameObject player;
 
@@ -47,15 +47,14 @@ public class RoomBehavior : Photon.PunBehaviour {
 
     new public void OnJoinedRoom()
     {
-        player = PhotonNetwork.Instantiate("NetworkCameraRig", Vector3.zero, Quaternion.identity, 0);
+        player = PhotonNetwork.Instantiate("BNM_NetworkCameraRig", Vector3.zero, Quaternion.identity, 0);
         // Enable our control scripts for this instance
         enableBehavior(player.GetComponent<SteamVR_ControllerManager>());
         enableBehavior(player.GetComponent<SteamVR_PlayArea>());
-        enableBehavior(player.GetComponent<PlayerTeleportController>());
+        //enableBehavior(player.GetComponent<PlayerTeleportController>());
         // And stuff on children
         enableBehavior(player.GetComponentsInChildren<ShadowStepController>());
-        enableBehavior(player.GetComponentsInChildren<WandController>());
-        //enableBehavior(player.GetComponentsInChildren<ThrowingStar_WandController>());
+        enableBehavior(player.GetComponentsInChildren<PlyWare_WandController>());
         enableBehavior(player.GetComponentsInChildren<SteamVR_TrackedObject>());
         enableBehavior(player.GetComponentsInChildren<SteamVR_Ears>());
         enableBehavior(player.GetComponentsInChildren<AudioListener>());
@@ -63,7 +62,6 @@ public class RoomBehavior : Photon.PunBehaviour {
         enableBehavior(player.GetComponentsInChildren<FlareLayer>());
         enableBehavior(player.GetComponentsInChildren<SteamVR_Camera>());
         enableBehavior(player.GetComponentsInChildren<GUILayer>());
-        enableBehavior(player.GetComponentsInChildren<PlayerBodyBehavior>());
     }
 
 

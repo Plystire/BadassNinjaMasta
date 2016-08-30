@@ -47,6 +47,19 @@ public class PlyWare_NetworkEventManager : Photon.PunBehaviour {
 
     public void OnEvent(byte code, object contentObj, int senderId)
     {
+        playerRig daPlr = new playerRig();
+        daPlr.id = -1;
+        foreach (playerRig pr in playerRigs)
+        {
+            if (pr.id == senderId)
+            {
+                daPlr = pr;
+                break;
+            }
+        }
+        if (daPlr.id == -1) // Uhhhh, yeah
+            return;
+
         Debug.Log("[Received Event]: " + ((EventCodes)code));
 
         // Grab our content
@@ -56,69 +69,53 @@ public class PlyWare_NetworkEventManager : Photon.PunBehaviour {
         {
             case EventCodes.SpawnWeapon:
                 // Spawn a item attached to GameObject
-                foreach(playerRig pr in playerRigs)
+                // Spawn item onto this rig
+
+                GameObject toSpawn = weaponPrefabs[(byte)content["spawn"]];
+                bodyPart parent;
+
+                switch((AttachPoints)content["attachTo"])
                 {
-                    if (pr.id == senderId)
-                    {
-                        // Spawn item onto this rig
-
-                        GameObject toSpawn = weaponPrefabs[(byte)content["spawn"]];
-                        bodyPart parent;
-
-                        switch((AttachPoints)content["attachTo"])
-                        {
-                            case AttachPoints.RightHand:
-                                parent = pr.right;
-                                break;
-                            case AttachPoints.LeftHand:
-                                parent = pr.left;
-                                break;
-                            default:
-                                parent = pr.head;
-                                break;
-                        }
-
-                        WandController wand = parent.gameObject.GetComponent<WandController>();
-
-                        int count = 1;
-                        if (toSpawn.name.Contains("Star"))
-                            count = 4;
-
-                        GameObject clone = (GameObject)Instantiate(toSpawn, null, false);
-                        InteractObject intObj = clone.GetComponent<InteractObject>();
-                        intObj.InitNetworkPickup(parent.gameObject, count);
-
-                        parent.attachments.Add(intObj);
-
+                    case AttachPoints.RightHand:
+                        parent = daPlr.right;
                         break;
-                    }
+                    case AttachPoints.LeftHand:
+                        parent = daPlr.left;
+                        break;
+                    default:
+                        parent = daPlr.head;
+                        break;
                 }
+
+                PlyWare_WandController wand = parent.gameObject.GetComponent<PlyWare_WandController>();
+
+                int count = 1;
+                if (toSpawn.name.Contains("Star"))
+                    count = 4;
+
+                GameObject clone = (GameObject)Instantiate(toSpawn, null, false);
+                InteractObject intObj = clone.GetComponent<InteractObject>();
+                intObj.InitNetworkPickup(parent.gameObject, count);
+
+                parent.attachments.Add(intObj);
                 break;
 
             case EventCodes.ReleaseWeapon:
                 // Force release of weapon in hand given velocities and orientation
-                foreach(playerRig pr in playerRigs)
+                bodyPart wandBP;
+                if ((bool)content["isRight"])
+                {   // Right hand
+                    wandBP = daPlr.right;
+                } else
+                {   // Left hand
+                    wandBP = daPlr.left;
+                }
+
+                // Grab first attachment to bodyPart and release it
+                if (wandBP.attachments.Count > 0)
                 {
-                    if (pr.id == senderId)
-                    {
-                        bodyPart wand;
-                        if ((bool)content["isRight"])
-                        {   // Right hand
-                            wand = pr.right;
-                        } else
-                        {   // Left hand
-                            wand = pr.left;
-                        }
-
-                        // Grab first attachment to bodyPart and release it
-                        if (wand.attachments.Count > 0)
-                        {
-                            wand.attachments[0].EndInteractionFromNetwork((Vector3)content["pos"], (Quaternion)content["rot"], (Vector3)content["vel"], (Vector3)content["avel"]);   // No wand
-                            wand.attachments.RemoveAt(0);
-                        }
-
-                        break;
-                    }
+                    wandBP.attachments[0].EndInteractionFromNetwork((Vector3)content["pos"], (Quaternion)content["rot"], (Vector3)content["vel"], (Vector3)content["avel"]);   // No wand
+                    wandBP.attachments.RemoveAt(0);
                 }
                 break;
         }

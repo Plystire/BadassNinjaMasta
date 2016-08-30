@@ -4,6 +4,8 @@ using System.Collections.Generic;
 
 public class PlyWare_WandController : MonoBehaviour
 {
+    // Network Mode
+    public bool networkMode = false;
 
     // Trigger stuff
     private Valve.VR.EVRButtonId triggerButton = Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger;
@@ -47,6 +49,30 @@ public class PlyWare_WandController : MonoBehaviour
 
     private float stickyTime = 0.0f;    // Time in seconds during which wand cannot drop item
 
+    // Auto-Pickup vars
+    private bool autoPickupTracker = false;
+    private Valve.VR.EVRButtonId autoPickupButton;
+    private int autoPickupMaxInt = 1;
+    private int autoPickupCt = 0;
+    public int autoPickupMaxInteractions
+    {
+        set
+        {
+            autoPickupMaxInt = value;
+        }
+    }
+    public Valve.VR.EVRButtonId autoPickup
+    {
+        set
+        {
+            autoPickupTracker = true;
+            autoPickupButton = value;
+            autoPickupMaxInt = 1;   // Default max interactions to 1
+            if (autoPickupTracker)
+                autoPickupCt = 2;       // 2 frames is plenty of time for trigger interactions, and too fast for player to notice ;)
+        }
+    }
+
     // PUBLIC ACCESS TO JOINT REFERENCES
     public Joint springJoint;
     public Joint fixedJoint;
@@ -63,55 +89,72 @@ public class PlyWare_WandController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        // Update controller state
-        trigD = controller.GetPressDown(triggerButton);
-        trigU = controller.GetPressUp(triggerButton);
-        if (trigD)
-            trig = true;
-        if (trigU)
-            trig = false;
-        gripD = controller.GetPressDown(gripButton);
-        gripU = controller.GetPressUp(gripButton);
-        if (gripD)
-            grip = true;
-        if (gripU)
-            grip = false;
-        padD = controller.GetPressDown(padButton);
-        padU = controller.GetPressUp(padButton);
-        if (padD)
-            pad = true;
-        if (padU)
-            pad = false;
-        padA = controller.GetAxis(padButton);
-
-        // Update sticky time
-        stickyTime -= Time.deltaTime;
-
-        // Determine if we need to drop our currently interacting item
-        if (currentlyInteracting && currentIObj.Count > 0)
+        if (!networkMode)
         {
-            if (controller.GetPressUp(currentIObjDropButton))
+            // Update controller state
+            trigD = controller.GetPressDown(triggerButton);
+            trigU = controller.GetPressUp(triggerButton);
+            if (trigD)
+                trig = true;
+            if (trigU)
+                trig = false;
+            gripD = controller.GetPressDown(gripButton);
+            gripU = controller.GetPressUp(gripButton);
+            if (gripD)
+                grip = true;
+            if (gripU)
+                grip = false;
+            padD = controller.GetPressDown(padButton);
+            padU = controller.GetPressUp(padButton);
+            if (padD)
+                pad = true;
+            if (padU)
+                pad = false;
+            padA = controller.GetAxis(padButton);
+
+            // Update sticky time
+            if (stickyTime > 0)
+                stickyTime -= Time.deltaTime;
+
+            // Determine if we need to drop our currently interacting item
+            if (currentlyInteracting && currentIObj.Count > 0)
             {
-                //Debug.Log("Drop Interacting Object!");
-                dropInteractObject();   // Drop it
+                if (controller.GetPressUp(currentIObjDropButton))
+                {
+                    //Debug.Log("Drop Interacting Object!");
+                    dropInteractObject();   // Drop it
+                }
             }
+
+            // Fire events
+            if (trigD)
+                btnDownNearest(triggerButton);
+            if (trigU)
+                btnUpNearest(triggerButton);
+            if (gripD)
+                btnDownNearest(gripButton);
+            if (gripU)
+                btnUpNearest(gripButton);
+            if (padD)
+                btnDownNearest(padButton);
+            if (padU)
+                btnUpNearest(padButton);
         }
 
-        // Fire events
-        if (trigD)
-            btnDownNearest(triggerButton);
-        if (trigU)
-            btnUpNearest(triggerButton);
-        if (gripD)
-            btnDownNearest(gripButton);
-        if (gripU)
-            btnUpNearest(gripButton);
-        if (padD)
-            btnDownNearest(padButton);
-        if (padU)
-            btnUpNearest(padButton);
+    }
 
+    void FixedUpdate()
+    {
+        if (autoPickupTracker && autoPickupCt-- <= 0)
+        {   // AUTO PICKUP
+            autoPickupTracker = false;
 
+            // Auto-Pickup
+            pickupObject(NearestObject(), autoPickupMaxInt, autoPickupButton);
+
+            // DEBUG ONLY
+            trackedObj.enabled = true;
+        }
     }
 
     #endregion
@@ -124,7 +167,7 @@ public class PlyWare_WandController : MonoBehaviour
 
         if (IObj && !currentIObj.Contains(IObj))    // Don't try to pickup our pickedup items :P
         {
-            //Debug.Log("WandTriggerEnter: " + col.name);
+            Debug.Log("WandTriggerEnter: " + col.name);
             potentialObjs.Add(IObj);
         }
     }
@@ -135,6 +178,7 @@ public class PlyWare_WandController : MonoBehaviour
 
         if (IObj && potentialObjs.Contains(IObj))
         {
+            Debug.Log("WandTriggerExit: " + col.name);
             potentialObjs.Remove(IObj);
         }
 
