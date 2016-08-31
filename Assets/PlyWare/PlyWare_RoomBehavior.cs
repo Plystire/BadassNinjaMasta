@@ -53,15 +53,18 @@ public class PlyWare_RoomBehavior : Photon.PunBehaviour {
         enableBehavior(player.GetComponent<SteamVR_PlayArea>());
         //enableBehavior(player.GetComponent<PlayerTeleportController>());
         // And stuff on children
-        enableBehavior(player.GetComponentsInChildren<ShadowStepController>());
-        enableBehavior(player.GetComponentsInChildren<PlyWare_WandController>());
-        enableBehavior(player.GetComponentsInChildren<SteamVR_TrackedObject>());
-        enableBehavior(player.GetComponentsInChildren<SteamVR_Ears>());
-        enableBehavior(player.GetComponentsInChildren<AudioListener>());
-        enableBehavior(player.GetComponentsInChildren<Camera>());
-        enableBehavior(player.GetComponentsInChildren<FlareLayer>());
-        enableBehavior(player.GetComponentsInChildren<SteamVR_Camera>());
-        enableBehavior(player.GetComponentsInChildren<GUILayer>());
+        //enableBehavior(player.GetComponentsInChildren<PlyWare_WandController>());
+        foreach(PlyWare_WandController wand in player.GetComponentsInChildren<PlyWare_WandController>(true))
+        {   // Disable networkMode on this instance
+            wand.networkMode = false;
+        }
+        enableBehavior(player.GetComponentsInChildren<SteamVR_TrackedObject>(true));
+        enableBehavior(player.GetComponentsInChildren<SteamVR_Ears>(true));
+        enableBehavior(player.GetComponentsInChildren<AudioListener>(true));
+        enableBehavior(player.GetComponentsInChildren<Camera>(true));
+        enableBehavior(player.GetComponentsInChildren<FlareLayer>(true));
+        enableBehavior(player.GetComponentsInChildren<SteamVR_Camera>(true));
+        enableBehavior(player.GetComponentsInChildren<GUILayer>(true));
     }
 
 

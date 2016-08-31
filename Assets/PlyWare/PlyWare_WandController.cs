@@ -90,57 +90,60 @@ public class PlyWare_WandController : MonoBehaviour
     void Update()
     {
         if (!networkMode)
-        {
-            // Update controller state
-            trigD = controller.GetPressDown(triggerButton);
-            trigU = controller.GetPressUp(triggerButton);
-            if (trigD)
-                trig = true;
-            if (trigU)
-                trig = false;
-            gripD = controller.GetPressDown(gripButton);
-            gripU = controller.GetPressUp(gripButton);
-            if (gripD)
-                grip = true;
-            if (gripU)
-                grip = false;
-            padD = controller.GetPressDown(padButton);
-            padU = controller.GetPressUp(padButton);
-            if (padD)
-                pad = true;
-            if (padU)
-                pad = false;
-            padA = controller.GetAxis(padButton);
+        {   // Should only be in here if this is our client's instance
 
             // Update sticky time
             if (stickyTime > 0)
                 stickyTime -= Time.deltaTime;
 
-            // Determine if we need to drop our currently interacting item
-            if (currentlyInteracting && currentIObj.Count > 0)
+            if (controller.connected)
             {
-                if (controller.GetPressUp(currentIObjDropButton))
+                // Update controller state
+                trigD = controller.GetPressDown(triggerButton);
+                trigU = controller.GetPressUp(triggerButton);
+                if (trigD)
+                    trig = true;
+                if (trigU)
+                    trig = false;
+                gripD = controller.GetPressDown(gripButton);
+                gripU = controller.GetPressUp(gripButton);
+                if (gripD)
+                    grip = true;
+                if (gripU)
+                    grip = false;
+                padD = controller.GetPressDown(padButton);
+                padU = controller.GetPressUp(padButton);
+                if (padD)
+                    pad = true;
+                if (padU)
+                    pad = false;
+                padA = controller.GetAxis(padButton);
+
+                // Determine if we need to drop our currently interacting item
+                if (currentlyInteracting && currentIObj.Count > 0)
                 {
-                    //Debug.Log("Drop Interacting Object!");
-                    dropInteractObject();   // Drop it
+                    if (controller.GetPressUp(currentIObjDropButton))
+                    {
+                        //Debug.Log("Drop Interacting Object!");
+                        dropInteractObject();   // Drop it
+                    }
                 }
+
+                // Fire events
+                if (trigD)
+                    btnDownNearest(triggerButton);
+                if (trigU)
+                    btnUpNearest(triggerButton);
+                if (gripD)
+                    btnDownNearest(gripButton);
+                if (gripU)
+                    btnUpNearest(gripButton);
+                if (padD)
+                    btnDownNearest(padButton);
+                if (padU)
+                    btnUpNearest(padButton);
             }
-
-            // Fire events
-            if (trigD)
-                btnDownNearest(triggerButton);
-            if (trigU)
-                btnUpNearest(triggerButton);
-            if (gripD)
-                btnDownNearest(gripButton);
-            if (gripU)
-                btnUpNearest(gripButton);
-            if (padD)
-                btnDownNearest(padButton);
-            if (padU)
-                btnUpNearest(padButton);
         }
-
     }
 
     void FixedUpdate()
@@ -278,22 +281,25 @@ public class PlyWare_WandController : MonoBehaviour
         //Debug.Log("Picking up [" + currentIObj[ind] + " : " + ind + "]");
 
         // Network stuff
-        Debug.LogError("Implement Pickup object NETWORK CODE");
-        RaiseEventOptions REO = new RaiseEventOptions();
-        Dictionary<string, object> EMC = new Dictionary<string, object>();  // Event Message Content
-        NetworkEventManager.AttachPoints att = NetworkEventManager.AttachPoints.LeftHand;
-        if (name.Contains("right"))
-            att = NetworkEventManager.AttachPoints.RightHand;
-        EMC.Add("attachTo", att);   // Add our attach point to our EMC
-        // Grab relative orientation
-        Vector3 relativePos = transform.position - IObj.transform.position;
-        Quaternion relativeRot = transform.rotation * Quaternion.Inverse(IObj.transform.rotation);
-        EMC.Add("relativeWandPos", relativePos);
-        EMC.Add("relativeWandRot", relativeRot);
-        EMC.Add("networkID", IObj.networkID);
-        EMC.Add("dropBtn", dropButton);
-        EMC.Add("maxInt", maxInteractions);
-        PlyWare_NetworkEventManager.RaiseEvent((byte)PlyWare_NetworkEventManager.EventCodes.PickupInteractObject, EMC, true, REO);
+        if (!networkMode)
+        {
+            Debug.LogWarning("Pickup Network Event Raised: " + IObj.name);
+            RaiseEventOptions REO = new RaiseEventOptions();
+            Dictionary<string, object> EMC = new Dictionary<string, object>();  // Event Message Content
+            NetworkEventManager.AttachPoints att = NetworkEventManager.AttachPoints.LeftHand;
+            if (name.Contains("right"))
+                att = NetworkEventManager.AttachPoints.RightHand;
+            EMC.Add("attachTo", att);   // Add our attach point to our EMC
+            // Grab relative orientation
+            Vector3 relativePos = transform.position - IObj.transform.position;
+            Quaternion relativeRot = transform.rotation * Quaternion.Inverse(IObj.transform.rotation);
+            EMC.Add("relativeWandPos", relativePos);
+            EMC.Add("relativeWandRot", relativeRot);
+            EMC.Add("networkID", IObj.networkID);
+            EMC.Add("dropBtn", dropButton);
+            EMC.Add("maxInt", maxInteractions);
+            PlyWare_NetworkEventManager.RaiseEvent((byte)PlyWare_NetworkEventManager.EventCodes.PickupInteractObject, EMC, true, REO);
+        }
 
         return true;
     }

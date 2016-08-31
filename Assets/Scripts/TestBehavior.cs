@@ -32,6 +32,5 @@ public class TestBehavior : MonoBehaviour {
     void OnTriggerEnter(Collider col)
     {
         Debug.Log("TestB: Trigger entered");
-        track = true;
     }
 }
