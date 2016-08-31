@@ -277,6 +277,15 @@ public class PlyWare_WandController : MonoBehaviour
 
         //Debug.Log("Picking up [" + currentIObj[ind] + " : " + ind + "]");
 
+        // Network stuff
+        Debug.LogError("Implement Pickup object NETWORK CODE");
+        RaiseEventOptions REO = new RaiseEventOptions();
+        Dictionary<string, object> EMC = new Dictionary<string, object>();  // Event Message Content
+        NetworkEventManager.AttachPoints att = NetworkEventManager.AttachPoints.LeftHand;
+        if (name.Contains("right"))
+            att = NetworkEventManager.AttachPoints.RightHand;
+        EMC.Add("attachTo", att);   // Add our attach point to our EMC
+
         return true;
     }
 
