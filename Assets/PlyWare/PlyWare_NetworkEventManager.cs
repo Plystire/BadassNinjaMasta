@@ -24,6 +24,7 @@ public class PlyWare_NetworkEventManager : Photon.PunBehaviour {
     // Event codes
     public enum EventCodes
     {
+        PickupInteractObject,
         SpawnInteractObject,
         SpawnWeapon,
         ReleaseWeapon,
@@ -67,6 +68,51 @@ public class PlyWare_NetworkEventManager : Photon.PunBehaviour {
 
         switch((EventCodes)code)
         {
+            case EventCodes.PickupInteractObject:
+                // Find and pickup the object with networkID
+                PlyWare_InteractObject[] IObjs = FindObjectsOfType<PlyWare_InteractObject>();
+                PlyWare_InteractObject pickupObj = null;
+
+                foreach(PlyWare_InteractObject IObj in IObjs)
+                {
+                    if (IObj.networkID == (string)content["networkID"])
+                    {
+                        pickupObj = IObj;
+                        break;
+                    }
+                }
+
+                if (pickupObj)
+                {   // Pick the object ... up
+                    PlyWare_WandController hand = null;
+
+                    switch ((AttachPoints)content["attachTo"])
+                    {
+                        case AttachPoints.RightHand:
+                            hand = daPlr.right.gameObject.GetComponent<PlyWare_WandController>();
+                            break;
+                        case AttachPoints.LeftHand:
+                            hand = daPlr.left.gameObject.GetComponent<PlyWare_WandController>();
+                            break;
+                        default:
+                            hand = daPlr.right.gameObject.GetComponent<PlyWare_WandController>();
+                            break;
+                    }
+
+                    if (hand)
+                    {   // Attach to hand at given orientation
+                        //
+                        Vector3 relPos = (Vector3)content["relativeWandPos"];
+                        Quaternion relRot = (Quaternion)content["relativeWandRot"];
+
+                        hand.transform.position = pickupObj.transform.position + relPos;
+                        hand.transform.rotation = relRot * pickupObj.transform.rotation;
+
+                        hand.autoPickup = (Valve.VR.EVRButtonId)content["dropBtn"];
+                        hand.autoPickupMaxInteractions = (int)content["maxInt"];
+                    }
+                }
+                break;
             case EventCodes.SpawnWeapon:
                 // Spawn a item attached to GameObject
                 // Spawn item onto this rig

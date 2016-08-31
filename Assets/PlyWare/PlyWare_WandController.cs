@@ -285,6 +285,15 @@ public class PlyWare_WandController : MonoBehaviour
         if (name.Contains("right"))
             att = NetworkEventManager.AttachPoints.RightHand;
         EMC.Add("attachTo", att);   // Add our attach point to our EMC
+        // Grab relative orientation
+        Vector3 relativePos = transform.position - IObj.transform.position;
+        Quaternion relativeRot = transform.rotation * Quaternion.Inverse(IObj.transform.rotation);
+        EMC.Add("relativeWandPos", relativePos);
+        EMC.Add("relativeWandRot", relativeRot);
+        EMC.Add("networkID", IObj.networkID);
+        EMC.Add("dropBtn", dropButton);
+        EMC.Add("maxInt", maxInteractions);
+        PlyWare_NetworkEventManager.RaiseEvent((byte)PlyWare_NetworkEventManager.EventCodes.PickupInteractObject, EMC, true, REO);
 
         return true;
     }

@@ -31,6 +31,7 @@ public class PlyWare_InteractObject : MonoBehaviour
     //
     // If this object is to act as a network-controlled object
     public bool networkMode = false;
+    public string networkID = "";
 
     [Space(10)]
     [Header("Pickup options")]
@@ -127,6 +128,9 @@ public class PlyWare_InteractObject : MonoBehaviour
         {
             //Debug.LogError("InteractObject[" + name + "]: Initialized with no Rigidbody");
         }
+
+        if (networkMode && string.IsNullOrEmpty(networkID))
+            Debug.LogWarning("Network mode enabled with empty networkID: " + name);
 
         lastPos = new Vector3();
         lastRot = new Quaternion();
