@@ -25,7 +25,7 @@ public class PlyWare_NetworkPlayerRigBehavior : Photon.PunBehaviour {
             // Tell the EventManager about this player, their ID and their GameObjects
             SteamVR_ControllerManager CM = GetComponent<SteamVR_ControllerManager>();
             ID = info.sender.ID;
-            NetworkEventManager.checkInPlayer(ID, CM.right, CM.left, head);
+            PlyWare_NetworkEventManager.checkInPlayer(ID, CM.right, CM.left, head);
 
             // Inform the wand controllers that they are network entities
             PlyWare_WandController[] ret = GetComponentsInChildren<PlyWare_WandController>();
@@ -39,6 +39,6 @@ public class PlyWare_NetworkPlayerRigBehavior : Photon.PunBehaviour {
     void OnDestroy()
     {
         // Take this ID off our network list
-        NetworkEventManager.checkOutPlayer(ID);
+        PlyWare_NetworkEventManager.checkOutPlayer(ID);
     }
 }

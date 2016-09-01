@@ -353,7 +353,7 @@ public class PlyWare_InteractObject : MonoBehaviour
         //AutoAim();    // I don't think we need to run AutoAim on receiving client, do we? The other client has already performed autoaim
     }
 
-    public virtual void EndInteraction(GameObject wand)
+    public virtual void EndInteraction(GameObject wand, bool viaNetwork = false)
     {
         bool applyPhysics = true;
 
@@ -375,45 +375,49 @@ public class PlyWare_InteractObject : MonoBehaviour
                 break;
         }
 
-        if (applyPhysics)
-        {   // Apply direct physics to our object based on past values
-            rigidbody.velocity = deltaPos * velocityFactor * Time.fixedDeltaTime;
-            rigidbody.angularVelocity = (Time.fixedDeltaTime * angle * axis) * rotationFactor;
-        }
+        if (!viaNetwork)
+        {   // Don't do any of this if we're ending interaction via network
+            if (applyPhysics)
+            {   // Apply direct physics to our object based on past values
+                rigidbody.velocity = deltaPos * velocityFactor * Time.fixedDeltaTime;
+                rigidbody.angularVelocity = (Time.fixedDeltaTime * angle * axis) * rotationFactor;
+            }
 
 #if DEBUG
-        Debug.Log("EndInteraction:");
-        Debug.Log("wandPos: " + attachedWand.transform.position);
-        Debug.Log("Pos: " + rigidbody.velocity + " ; delta: " + deltaPos + " ; factor: " + velocityFactor + " ; time: " + Time.fixedDeltaTime);
-        Debug.Log("Rot: " + rigidbody.angularVelocity);
+            Debug.Log("EndInteraction:");
+            Debug.Log("wandPos: " + attachedWand.transform.position);
+            Debug.Log("Pos: " + rigidbody.velocity + " ; delta: " + deltaPos + " ; factor: " + velocityFactor + " ; time: " + Time.fixedDeltaTime);
+            Debug.Log("Rot: " + rigidbody.angularVelocity);
 #endif
+
+            // Apply throwing multiplier
+            rigidbody.velocity *= throwingVelocityMultiplier;
+            rigidbody.angularVelocity *= throwingVelocityMultiplier;
+
+            AutoAim();
+
+            if (networkMode)
+            {   // Raise network event to inform the masses
+                Dictionary<string, object> EMC = new Dictionary<string, object>();  // Event Message Content
+                RaiseEventOptions REO = new RaiseEventOptions();
+                EMC.Add("pos", transform.position);
+                EMC.Add("rot", transform.rotation);
+                EMC.Add("vel", rigidbody.velocity);
+                EMC.Add("avel", rigidbody.angularVelocity);
+                EMC.Add("attachTo", attachedWand.isRight ? PlyWare_NetworkEventManager.AttachPoints.RightHand : PlyWare_NetworkEventManager.AttachPoints.LeftHand);
+                EMC.Add("networkID", networkID);
+                Debug.LogError("Throwing object!!!!!!!!!!!!!!!!!!!");
+                Debug.LogWarning("Position: " + EMC["pos"]);
+                Debug.LogWarning("Rotation: " + EMC["rot"]);
+                Debug.LogWarning("Velocity: " + EMC["vel"]);
+                Debug.LogWarning("angularVelocity: " + EMC["avel"]);
+                PlyWare_NetworkEventManager.RaiseEvent((byte)PlyWare_NetworkEventManager.EventCodes.DropInteractObject, EMC, true, REO);
+            }
+        }
 
         // Stop interacting
         attachedWand = null;
         currentlyInteracting = false;
-
-        // Apply throwing multiplier
-        rigidbody.velocity *= throwingVelocityMultiplier;
-        rigidbody.angularVelocity *= throwingVelocityMultiplier;
-
-        AutoAim();
-
-        if (networkMode)
-        {   // Raise network event to inform the masses
-            Dictionary<string, object> content = new Dictionary<string, object>();
-            RaiseEventOptions REO = new RaiseEventOptions();
-            content.Add("pos", transform.position);
-            content.Add("rot", transform.rotation);
-            content.Add("vel", rigidbody.velocity);
-            content.Add("avel", rigidbody.angularVelocity);
-            content.Add("isRight", wand.name.Contains("right"));
-            Debug.LogError("Throwing object!!!!!!!!!!!!!!!!!!!");
-            Debug.LogWarning("Position: " + content["pos"]);
-            Debug.LogWarning("Rotation: " + content["rot"]);
-            Debug.LogWarning("Velocity: " + content["vel"]);
-            Debug.LogWarning("angularVelocity: " + content["avel"]);
-            NetworkEventManager.RaiseEvent((byte)NetworkEventManager.EventCodes.ReleaseWeapon, content, true, REO);
-        }
     }
 
     private void AutoAim()

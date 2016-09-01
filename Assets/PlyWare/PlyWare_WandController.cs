@@ -4,6 +4,12 @@ using System.Collections.Generic;
 
 public class PlyWare_WandController : MonoBehaviour
 {
+    private bool rightWand = false;
+    public bool isRight
+    {
+        get { return rightWand; }
+    }
+
     // Network Mode
     public bool networkMode = false;
 
@@ -84,6 +90,9 @@ public class PlyWare_WandController : MonoBehaviour
     {
         trackedObj = GetComponent<SteamVR_TrackedObject>();
         wandCollider = GetComponent<Collider>();
+
+        if (name.Contains("right"))
+            rightWand = true;
     }
 
     // Update is called once per frame
@@ -153,7 +162,9 @@ public class PlyWare_WandController : MonoBehaviour
             autoPickupTracker = false;
 
             // Auto-Pickup
-            pickupObject(NearestObject(), autoPickupMaxInt, autoPickupButton);
+            PlyWare_InteractObject no = NearestObject();
+            if (no)
+                pickupObject(no, autoPickupMaxInt, autoPickupButton);
 
             // DEBUG ONLY
             trackedObj.enabled = true;
@@ -287,7 +298,7 @@ public class PlyWare_WandController : MonoBehaviour
             RaiseEventOptions REO = new RaiseEventOptions();
             Dictionary<string, object> EMC = new Dictionary<string, object>();  // Event Message Content
             NetworkEventManager.AttachPoints att = NetworkEventManager.AttachPoints.LeftHand;
-            if (name.Contains("right"))
+            if (isRight)
                 att = NetworkEventManager.AttachPoints.RightHand;
             EMC.Add("attachTo", att);   // Add our attach point to our EMC
             // Grab relative orientation
@@ -304,7 +315,7 @@ public class PlyWare_WandController : MonoBehaviour
         return true;
     }
 
-    public void dropInteractObject()
+    public void dropInteractObject(bool viaNetwork = false)
     {   // Drop first object in list
         if (stickyTime > 0)
         {   // But not if we are in stickyTime-out
@@ -313,7 +324,7 @@ public class PlyWare_WandController : MonoBehaviour
         //Debug.Log("[dropInteractObject] Count: " + currentIObj.Count);
         if (currentIObj.Count > 0 && currentIObj[0])    // Not null
         {
-            currentIObj[0].EndInteraction(gameObject);   // Drop it
+            currentIObj[0].EndInteraction(gameObject, viaNetwork);   // Drop it
             currentIObj.RemoveAt(0);                // Remove from list
 
             if (currentIObj.Count == 0)

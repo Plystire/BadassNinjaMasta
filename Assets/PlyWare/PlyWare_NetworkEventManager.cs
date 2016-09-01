@@ -25,6 +25,7 @@ public class PlyWare_NetworkEventManager : Photon.PunBehaviour {
     public enum EventCodes
     {
         PickupInteractObject,
+        DropInteractObject,
         SpawnInteractObject,
         SpawnWeapon,
         ReleaseWeapon,
@@ -48,6 +49,9 @@ public class PlyWare_NetworkEventManager : Photon.PunBehaviour {
 
     public void OnEvent(byte code, object contentObj, int senderId)
     {
+
+        Debug.LogWarning("[Received Event]: " + ((EventCodes)code) + " ; " + senderId);
+
         playerRig daPlr = new playerRig();
         daPlr.id = -1;
         foreach (playerRig pr in playerRigs)
@@ -58,22 +62,21 @@ public class PlyWare_NetworkEventManager : Photon.PunBehaviour {
                 break;
             }
         }
+        Debug.Log(daPlr.id);
         if (daPlr.id == -1) // Uhhhh, yeah
             return;
-
-        Debug.Log("[Received Event]: " + ((EventCodes)code));
 
         // Grab our content
         Dictionary<string, object> content = (Dictionary<string, object>)contentObj;
 
-        switch((EventCodes)code)
+        PlyWare_InteractObject[] IObjs = FindObjectsOfType<PlyWare_InteractObject>();
+        PlyWare_InteractObject pickupObj = null;
+
+        switch ((EventCodes)code)
         {
             case EventCodes.PickupInteractObject:
-                // Find and pickup the object with networkID
-                PlyWare_InteractObject[] IObjs = FindObjectsOfType<PlyWare_InteractObject>();
-                PlyWare_InteractObject pickupObj = null;
-
-                foreach(PlyWare_InteractObject IObj in IObjs)
+                // Find the object with networkID
+                foreach (PlyWare_InteractObject IObj in IObjs)
                 {
                     if (IObj.networkID == (string)content["networkID"])
                     {
@@ -110,6 +113,61 @@ public class PlyWare_NetworkEventManager : Photon.PunBehaviour {
 
                         hand.autoPickup = (Valve.VR.EVRButtonId)content["dropBtn"];
                         hand.autoPickupMaxInteractions = (int)content["maxInt"];
+                    }
+                }
+                break;
+            case EventCodes.DropInteractObject:
+                // Find and pickup the object with networkID
+                foreach (PlyWare_InteractObject IObj in IObjs)
+                {
+                    if (IObj.networkID == (string)content["networkID"])
+                    {
+                        pickupObj = IObj;
+                        break;
+                    }
+                }
+
+                if (pickupObj)
+                {   // Throw object
+                    PlyWare_WandController hand = null;
+
+                    switch ((AttachPoints)content["attachTo"])
+                    {
+                        case AttachPoints.RightHand:
+                            hand = daPlr.right.gameObject.GetComponent<PlyWare_WandController>();
+                            break;
+                        case AttachPoints.LeftHand:
+                            hand = daPlr.left.gameObject.GetComponent<PlyWare_WandController>();
+                            break;
+                        default:
+                            hand = daPlr.right.gameObject.GetComponent<PlyWare_WandController>();
+                            break;
+                    }
+
+                    if (hand)
+                    {   // Throw from given orientation
+                        //
+                        Vector3 pos = (Vector3)content["pos"];
+                        Quaternion rot = (Quaternion)content["rot"];
+                        Vector3 vel = (Vector3)content["vel"];
+                        Vector3 avel = (Vector3)content["avel"];
+
+                        hand.dropInteractObject(true);
+
+                        Rigidbody rig = pickupObj.GetComponent<Rigidbody>();
+
+                        rig.isKinematic = true; // Turn kinematic on for moving of transform
+
+                        pickupObj.transform.position = pos;
+                        pickupObj.transform.rotation = rot;
+
+                        rig.isKinematic = false;
+
+                        if (rig)
+                        {   // Apply desired physics
+                            rig.velocity = vel;
+                            rig.angularVelocity = avel;
+                        }
                     }
                 }
                 break;
@@ -169,6 +227,7 @@ public class PlyWare_NetworkEventManager : Photon.PunBehaviour {
 
     public static void RaiseEvent(byte eventCode, object eventContent, bool sendReliable, RaiseEventOptions options)
     {
+        Debug.LogWarning("Sending Photon Event: " + (EventCodes)eventCode);
         PhotonNetwork.RaiseEvent(eventCode, eventContent, sendReliable, options);
     }
 
@@ -183,6 +242,8 @@ public class PlyWare_NetworkEventManager : Photon.PunBehaviour {
         pr.head.attachments = new List<InteractObject>();
         pr.id = ID;
         playerRigs.Add(pr);
+
+        Debug.Log("EventMngr: Checked in player");
     }
 
     public static void checkOutPlayer(int ID)
@@ -195,5 +256,7 @@ public class PlyWare_NetworkEventManager : Photon.PunBehaviour {
                 break;
             }
         }
+
+        Debug.Log("EventMngr: Checked out player");
     }
 }
