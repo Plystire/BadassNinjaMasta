@@ -28,6 +28,13 @@ public class PlyWare_InteractObject : PunBehaviour
     private float angle;
     private Vector3 axis;
 
+    private bool hasInteracted = false;
+
+    // Sticky variables
+    private bool isStuck = false;
+    private bool triggerStickyCheck = false;
+    private bool collisionStickyCheck = false;
+
     // PUBLICS
     //
     // If this object is to act as a network-controlled object
@@ -51,6 +58,8 @@ public class PlyWare_InteractObject : PunBehaviour
         None, Fixed, Spring
     }
     public Joints usingJoint = Joints.Spring;
+    // Life span of item after interaction
+    public float lifeSpan = 0.0f;
 
     [Space(10)]
     [Header("Throwing options")]
@@ -62,6 +71,9 @@ public class PlyWare_InteractObject : PunBehaviour
     /// Velocity multiplier for throwing this object
     /// </summary>
     public float throwingVelocityMultiplier = 1.0f;
+    //
+    public bool canStick = false;
+    public float stickyThresholdVelocity = 0.0f;
 
 
 
@@ -112,12 +124,21 @@ public class PlyWare_InteractObject : PunBehaviour
     virtual public void WandButtonUp(PlyWare_WandController wand, Valve.VR.EVRButtonId btn)
     { }
 
+    private void getRigidbody()
+    {
+        rigidbody = GetComponent<Rigidbody>();
+        if (!rigidbody)
+        {
+            rigidbody = GetComponentInChildren<Rigidbody>();
+        }
+    }
+
     /// <summary>
     /// Use this for initialization
     /// </summary>
     public virtual void Start()
     {
-        rigidbody = GetComponent<Rigidbody>();
+        getRigidbody();
         //interactionPoint = new GameObject().transform;
         if (rigidbody)
         {
@@ -138,15 +159,29 @@ public class PlyWare_InteractObject : PunBehaviour
     }
 
     /// <summary>
-    /// Use this to Update things each frame
+    /// Use this to Update things each frame.
+    /// We handle item lifeSpan here.
     /// </summary>
     public virtual void Update()
-    {
-        // Do update stuff
+    {   // Do update stuff
+
+        // If we have a lifespan
+        if (lifeSpan > 0.0f)
+        {   // Decay item if we've interacted before and we no longer are
+            if (!IsInteracting() && hasInteracted)
+            {   // Lower life until dead
+                lifeSpan -= Time.deltaTime;
+                if (lifeSpan <= 0.0f)
+                {
+                    Destroy(gameObject);
+                }
+            }
+        }
     }
 
     /// <summary>
     /// Use this to Update things when physics update
+    /// We handle rigidbody and joint pickUp tracking here
     /// </summary>
     public virtual void FixedUpdate()
     {
@@ -237,6 +272,90 @@ public class PlyWare_InteractObject : PunBehaviour
         }
     }
 
+    #region Collision stuff
+    public virtual void OnTriggerEnter(Collider col)
+    {
+        if (canStick)
+        {
+            if (isStuck)
+                return;
+
+            triggerStickyCheck = true;
+
+            Debug.LogError("Sticky Trigger [" + name + "]");
+
+            if (!collisionStickyCheck && rigidbody)
+            {   // Flag for can stick
+                float rigmag = rigidbody.velocity.magnitude;
+                //Debug.Log("[StickyCollider.OnTriggerEnter] VelMag: " + rigmag);
+                Debug.Log("Sticky Trigger!! Vel: " + rigmag + "  ; Col.Name: " + col.name);
+                if (rigmag < stickyThresholdVelocity)
+                    return; // Don't stick if we're not moving fast enough
+                CanStickTo cst = col.GetComponent<CanStickTo>();
+                if (cst)
+                    canStick = true;
+
+                Debug.Log("CanStick: " + canStick);
+
+                return;
+            }
+
+            collisionStickyCheck = triggerStickyCheck = false;
+
+            stick(col.transform);
+        }
+    }
+
+    void OnTriggerExit(Collider col)
+    {
+        if (isStuck)
+            return;
+        triggerStickyCheck = false;
+        Debug.Log("Sticky TriggerLeave [" + name + "]: " + col.name);
+    }
+
+    void OnCollisionEnter(Collision col)
+    {
+        if (canStick)
+        {
+            if (isStuck)
+                return;
+
+            collisionStickyCheck = true;
+
+            Debug.LogError("Sticky Collision [" + name + "]");
+
+            if (!triggerStickyCheck && rigidbody)
+            {   // Flag for can stick
+                float rigmag = rigidbody.velocity.magnitude;
+                //Debug.Log("[StickyCollider.OnTriggerEnter] VelMag: " + rigmag);
+                Debug.Log("Sticky Collision!! Vel: " + rigmag + "  ; Col.Name: " + col.gameObject.name);
+                if (rigmag < stickyThresholdVelocity)
+                    return; // Don't stick if we're not moving fast enough
+                CanStickTo cst = col.collider.GetComponent<CanStickTo>();
+                Debug.Log("CST: " + cst);
+                if (cst)
+                    canStick = true;
+
+                Debug.Log("CanStick: " + canStick);
+                return;
+            }
+
+            collisionStickyCheck = triggerStickyCheck = false;
+
+            stick(col.transform);
+        }
+    }
+
+    void OnCollisionExit(Collision col)
+    {
+        if (isStuck)
+            return;
+        collisionStickyCheck = false;
+        Debug.Log("Sticky CollisionLeave: " + col.collider.name);
+    }
+#endregion
+
     private List<GameObject> destroyList = new List<GameObject>();
 
     /// <summary>
@@ -313,23 +432,8 @@ public class PlyWare_InteractObject : PunBehaviour
             }
 
             currentlyInteracting = true;
+            hasInteracted = true;
         }
-    }
-
-    public void SetInteractionPoint(Vector3 pos, Vector3 rot)
-    {
-        if (pos != null)
-            interactionPoint.position = pos;
-        if (rot != null)
-            interactionPoint.rotation = Quaternion.Euler(rot);
-    }
-
-    public void SetInteractionPointLocal(Vector3? pos, Vector3? rot)
-    {
-        if (pos != null)
-            interactionPoint.localPosition = (Vector3)pos;
-        if (rot != null)
-            interactionPoint.localRotation = Quaternion.Euler((Vector3)rot);
     }
 
     public virtual void EndInteraction(GameObject wand, bool viaNetwork = false)
@@ -362,18 +466,18 @@ public class PlyWare_InteractObject : PunBehaviour
                 rigidbody.angularVelocity = (Time.fixedDeltaTime * angle * axis) * rotationFactor;
             }
 
+            // Apply throwing multiplier
+            rigidbody.velocity *= throwingVelocityMultiplier;
+            rigidbody.angularVelocity *= throwingVelocityMultiplier;
+
+            AutoAim();
+
 #if DEBUG
             Debug.Log("EndInteraction:");
             Debug.Log("wandPos: " + attachedWand.transform.position);
             Debug.Log("Pos: " + rigidbody.velocity + " ; delta: " + deltaPos + " ; factor: " + velocityFactor + " ; time: " + Time.fixedDeltaTime);
             Debug.Log("Rot: " + rigidbody.angularVelocity);
 #endif
-
-            // Apply throwing multiplier
-            rigidbody.velocity *= throwingVelocityMultiplier;
-            rigidbody.angularVelocity *= throwingVelocityMultiplier;
-
-            AutoAim();
 
             if (networkMode)
             {   // Raise network event to inform the masses
@@ -461,6 +565,27 @@ public class PlyWare_InteractObject : PunBehaviour
         }
     }
 
+    private void stick(Transform parent)
+    {
+        // Stick to colliding object
+        //
+        isStuck = true;
+
+        if (rigidbody)
+        {   // Set kinematic and reset velocities
+            rigidbody.velocity = Vector3.zero;
+            rigidbody.angularVelocity = Vector3.zero;
+            rigidbody.isKinematic = true;
+            rigidbody.detectCollisions = false;       // DOn't detect collisions anymore
+        }
+
+        // Set parent to buffer object so we can retain orientation
+        GameObject stickBuffer = new GameObject();
+        stickBuffer.transform.SetParent(parent);
+        transform.SetParent(stickBuffer.transform);
+        DestroyObjectOnDestroy(stickBuffer);    // Make sure this is destroyed when we are
+    }
+
     public bool IsInteracting()
     {
         return currentlyInteracting;
@@ -474,5 +599,21 @@ public class PlyWare_InteractObject : PunBehaviour
     public Transform GetInteractionPoint()
     {
         return interactionPoint;
+    }
+
+    public void SetInteractionPoint(Vector3 pos, Vector3 rot)
+    {
+        if (pos != null)
+            interactionPoint.position = pos;
+        if (rot != null)
+            interactionPoint.rotation = Quaternion.Euler(rot);
+    }
+
+    public void SetInteractionPointLocal(Vector3? pos, Vector3? rot)
+    {
+        if (pos != null)
+            interactionPoint.localPosition = (Vector3)pos;
+        if (rot != null)
+            interactionPoint.localRotation = Quaternion.Euler((Vector3)rot);
     }
 }

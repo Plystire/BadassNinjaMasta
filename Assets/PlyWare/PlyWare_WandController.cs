@@ -17,6 +17,7 @@ public class PlyWare_WandController : MonoBehaviour
 
     // Ragdoll hand collider
     public Collider ragdollHand;
+    private int ragdollEnableDelay = -1;
 
     // Trigger stuff
     private Valve.VR.EVRButtonId triggerButton = Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger;
@@ -156,6 +157,15 @@ public class PlyWare_WandController : MonoBehaviour
                     btnDownNearest(padButton);
                 if (padU)
                     btnUpNearest(padButton);
+            }
+        }
+
+        // Delay enable our ragdoll collider
+        if (ragdollEnableDelay >= 0)
+        {
+            if (--ragdollEnableDelay < 0)
+            {
+                ragdollHand.enabled = true;
             }
         }
     }
@@ -346,8 +356,8 @@ public class PlyWare_WandController : MonoBehaviour
 
                 // If we have a ragdoll hand collider set, enable it
                 if (ragdollHand)
-                {
-                    ragdollHand.enabled = true;
+                {   // Delay our drop so we can throw things.  2-5 frames should be fine.
+                    ragdollEnableDelay = 5;
                 }
             }
         }

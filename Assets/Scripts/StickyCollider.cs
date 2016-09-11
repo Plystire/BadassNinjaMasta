@@ -10,6 +10,8 @@ public class StickyCollider : MonoBehaviour {
     private bool triggerCheck = false;
     private bool collisionCheck = false;
 
+    private bool isStuck = false;
+
     private Rigidbody rig;
 
 	// Use this for initialization
@@ -25,7 +27,12 @@ public class StickyCollider : MonoBehaviour {
 
     void OnTriggerEnter(Collider col)
     {
+        if (isStuck)
+            return;
+
         triggerCheck = true;
+
+        Debug.LogError("Sticky Trigger [" + name + "]");
 
         if (!collisionCheck)
         {   // Flag for can stick
@@ -51,9 +58,22 @@ public class StickyCollider : MonoBehaviour {
         }
     }
 
+    void OnTriggerExit(Collider col)
+    {
+        if (isStuck)
+            return;
+        triggerCheck = false;
+        Debug.Log("Sticky TriggerLeave [" + name + "]: " + col.name);
+    }
+
     void OnCollisionEnter(Collision col)
     {
+        if (isStuck)
+            return;
+
         collisionCheck = true;
+        
+        Debug.LogError("Sticky Collision [" + name + "]");
 
         if (!triggerCheck)
         {   // Flag for can stick
@@ -78,12 +98,22 @@ public class StickyCollider : MonoBehaviour {
         }
     }
 
+    void OnCollisionExit(Collision col)
+    {
+        if (isStuck)
+            return;
+        collisionCheck = false;
+        Debug.Log("Sticky CollisionLeave: " + col.collider.name);
+    }
+
     private void stick(Transform parent)
     {
         // Stick to colliding object
         //
         InteractObject parentInteract = GetComponentInParent<InteractObject>();
         Transform parentTrans = parentInteract.transform;
+
+        isStuck = true;
 
         if (rig)
         {   // Set kinematic and reset velocities
