@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 public class PlyWare_NetworkEventManager : Photon.PunBehaviour {
 
-    public List<GameObject> weaponPrefabs;
+    public List<GameObject> spawnPrefabs;
 
     // Player components
     struct bodyPart
@@ -27,6 +27,7 @@ public class PlyWare_NetworkEventManager : Photon.PunBehaviour {
         PickupInteractObject,
         DropInteractObject,
         SpawnInteractObject,
+        SpawnInteractObjectIntoHand,
         SpawnWeapon,
         ReleaseWeapon,
         PlayerJoined
@@ -74,6 +75,13 @@ public class PlyWare_NetworkEventManager : Photon.PunBehaviour {
 
         switch ((EventCodes)code)
         {
+            case EventCodes.SpawnInteractObject:
+                // Spawn the object
+                //Vector3 pos = (Vector3)content["pos"];
+                //Quaternion rot = (Quaternion)content["rot"];
+
+
+                break;
             case EventCodes.PickupInteractObject:
                 // Find the object with networkID
                 foreach (PlyWare_InteractObject IObj in IObjs)
@@ -175,7 +183,7 @@ public class PlyWare_NetworkEventManager : Photon.PunBehaviour {
                 // Spawn a item attached to GameObject
                 // Spawn item onto this rig
 
-                GameObject toSpawn = weaponPrefabs[(byte)content["spawn"]];
+                GameObject toSpawn = spawnPrefabs[(byte)content["spawn"]];
                 bodyPart parent;
 
                 switch((AttachPoints)content["attachTo"])

@@ -2,8 +2,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using System;
+using Photon;
 
-public class PlyWare_InteractObject : MonoBehaviour
+public class PlyWare_InteractObject : PunBehaviour
 {
 
     new private Rigidbody rigidbody;
@@ -329,28 +330,6 @@ public class PlyWare_InteractObject : MonoBehaviour
             interactionPoint.localPosition = (Vector3)pos;
         if (rot != null)
             interactionPoint.localRotation = Quaternion.Euler((Vector3)rot);
-    }
-
-    public virtual void EndInteractionFromNetwork(Vector3 pos, Quaternion rot, Vector3 vel, Vector3 avel)
-    {
-        Debug.LogWarning("Throwing Network object!!!!!!!!!!!!!!!!!!!");
-        Debug.LogWarning("Position: " + pos);
-        Debug.LogWarning("Rotation: " + rot);
-        Debug.LogWarning("Velocity: " + vel);
-        Debug.LogWarning("angularVelocity: " + avel);
-
-        if (!rigidbody)
-            rigidbody = GetComponent<Rigidbody>();
-        // Apply orientation and velocities from network
-        transform.position = pos;
-        transform.rotation = rot;
-        rigidbody.velocity = vel;
-        rigidbody.angularVelocity = avel;
-
-        attachedWand = null;
-        currentlyInteracting = false;
-
-        //AutoAim();    // I don't think we need to run AutoAim on receiving client, do we? The other client has already performed autoaim
     }
 
     public virtual void EndInteraction(GameObject wand, bool viaNetwork = false)

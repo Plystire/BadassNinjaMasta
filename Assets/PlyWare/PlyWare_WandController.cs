@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System;
 
 public class PlyWare_WandController : MonoBehaviour
 {
@@ -12,6 +13,10 @@ public class PlyWare_WandController : MonoBehaviour
 
     // Network Mode
     public bool networkMode = false;
+    public bool isMine = false;
+
+    // Ragdoll hand collider
+    public Collider ragdollHand;
 
     // Trigger stuff
     private Valve.VR.EVRButtonId triggerButton = Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger;
@@ -98,7 +103,7 @@ public class PlyWare_WandController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (!networkMode)
+        if (!networkMode || isMine)
         {   // Should only be in here if this is our client's instance
 
             // Update sticky time
@@ -256,11 +261,11 @@ public class PlyWare_WandController : MonoBehaviour
         }
     }
 
-    public int CanInteract(PlyWare_InteractObject IObj)
+    public int CanInteract(Type objType)
     {
         if (currentlyInteracting)
         {   // Make sure this new thing matches what we have and if we can  have more
-            if (IObj.GetType() == currentIObj[0].GetType())
+            if (currentIObj[0].GetType() == objType)
             {
                 if (currentIObj.Count >= maxInteract)
                     return -1; // Too many
@@ -275,7 +280,7 @@ public class PlyWare_WandController : MonoBehaviour
 
     public bool pickupObject(PlyWare_InteractObject IObj, int maxInteractions = 1, Valve.VR.EVRButtonId dropButton = Valve.VR.EVRButtonId.k_EButton_Grip)
     {
-        int ind = CanInteract(IObj);
+        int ind = CanInteract(IObj.GetType());
         if (ind < 0)
             return false; // Can't interact right now
 
@@ -288,6 +293,12 @@ public class PlyWare_WandController : MonoBehaviour
         // Pickup the object
         currentIObj[ind].BeginInteraction(gameObject);
         currentlyInteracting = true;
+
+        // If we have a ragdoll hand set, disable it for picking things up
+        if (ragdollHand)
+        {
+            ragdollHand.enabled = false;
+        }
 
         //Debug.Log("Picking up [" + currentIObj[ind] + " : " + ind + "]");
 
@@ -332,6 +343,12 @@ public class PlyWare_WandController : MonoBehaviour
                 currentIObjDropButton = Valve.VR.EVRButtonId.k_EButton_Grip;
                 maxInteract = 1;
                 currentlyInteracting = false;
+
+                // If we have a ragdoll hand collider set, enable it
+                if (ragdollHand)
+                {
+                    ragdollHand.enabled = true;
+                }
             }
         }
     }

@@ -56,7 +56,7 @@ public class PlyWare_RoomBehavior : Photon.PunBehaviour {
         //enableBehavior(player.GetComponentsInChildren<PlyWare_WandController>());
         foreach(PlyWare_WandController wand in player.GetComponentsInChildren<PlyWare_WandController>(true))
         {   // Disable networkMode on this instance
-            wand.networkMode = false;
+            wand.isMine = true;
         }
         enableBehavior(player.GetComponentsInChildren<SteamVR_TrackedObject>(true));
         enableBehavior(player.GetComponentsInChildren<SteamVR_Ears>(true));

@@ -258,10 +258,12 @@
     <Compile Include="Assets\PhotonChatApi\ChatUserStatus.cs" />
     <Compile Include="Assets\PhotonChatApi\IChatClientListener.cs" />
     <Compile Include="Assets\PlyWare\PlyWare_InteractObject.cs" />
+    <Compile Include="Assets\PlyWare\PlyWare_InteractObjectSpawnerBehavior.cs" />
     <Compile Include="Assets\PlyWare\PlyWare_NetworkEventManager.cs" />
     <Compile Include="Assets\PlyWare\PlyWare_NetworkPlayerRigBehavior.cs" />
     <Compile Include="Assets\PlyWare\PlyWare_RoomBehavior.cs" />
     <Compile Include="Assets\PlyWare\PlyWare_WandController.cs" />
+    <Compile Include="Assets\Scripts\RagdollController.cs" />
     <Compile Include="Assets\Scripts\AssassinsBladeBehavior.cs" />
     <Compile Include="Assets\Scripts\AssassinsBladeController.cs" />
     <Compile Include="Assets\Scripts\BagBehavior.cs" />
@@ -280,6 +282,7 @@
     <Compile Include="Assets\Scripts\SheathWeapon.cs" />
     <Compile Include="Assets\Scripts\StarBehavior.cs" />
     <Compile Include="Assets\Scripts\StickyCollider.cs" />
+    <Compile Include="Assets\Scripts\TestBehavior.cs" />
     <Compile Include="Assets\Scripts\TestBehavior2.cs" />
     <Compile Include="Assets\Scripts\ThrowingStar_WandController.cs" />
     <Compile Include="Assets\Scripts\WandController.cs" />
@@ -318,7 +321,6 @@
     <Compile Include="Assets\SteamVR\Scripts\SteamVR_TrackedObject.cs" />
     <Compile Include="Assets\SteamVR\Scripts\SteamVR_UpdatePoses.cs" />
     <Compile Include="Assets\SteamVR\Scripts\SteamVR_Utils.cs" />
-    <Compile Include="Assets\Scripts\TestBehavior.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Japanese Mask\Shaders\StandardSpecular.shader" />
